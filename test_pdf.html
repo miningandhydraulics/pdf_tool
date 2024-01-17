@@ -66,41 +66,46 @@
 
   <!-- Script for generating the chart -->
   <script>
-    new Chartist.Line('#iso-chart', {
-      labels: ${chart_labels},
-      series: ${chart_series}
-    }, {
-      fullWidth: true,
-      showArea: false,
-      chartPadding: {
-        right: 10,
-        left: 10
-      },
+  new Chartist.Line('#iso-chart', {
+    labels: ${chart_labels},
+    series: ${chart_series}
+  }, {
+    fullWidth: true,
+    showArea: false,
+    chartPadding: {
+      right: 10,
+      left: 10
+    },
+    axisX: {
+      showGrid: true,
+      labelInterpolationFnc: function(value, index) {
+        return value;
+      }
+    },
+    axisY: {
+      showGrid: true,
+      onlyInteger: true,
+      offset: 20
+    },
+    lineSmooth: Chartist.Interpolation.simple({
+      divisor: 2
+    }),
+    low: 0,
+    plugins: [
+      Chartist.plugins.legend({
+        legendNames: ['ISO4', 'ISO6', 'ISO14']
+      })
+    ]
+  }, [
+    // Responsive options
+    ['screen and (max-width: 640px)', {
       axisX: {
-        showGrid: true,
         labelInterpolationFnc: function(value, index) {
-          return value;
+          return index % 2 === 0 ? value : null;
         }
-      },
-      axisY: {
-        showGrid: true,
-        onlyInteger: true,
-        offset: 20
-      },
-      lineSmooth: Chartist.Interpolation.simple({
-        divisor: 2
-      }),
-      low: 0
-    }, [
-      // Responsive options
-      ['screen and (max-width: 640px)', {
-        axisX: {
-          labelInterpolationFnc: function(value, index) {
-            return index % 2 === 0 ? value : null;
-          }
-        }
-      }]
-    ]);
+      }
+    }]
+  ]);
   </script>
 </body>
 </html>
