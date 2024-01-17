@@ -46,7 +46,12 @@
     .footer {
       text-align: center; /* Center align the footer content */
       margin-top: 20px;
+      width: 100%; /* Ensure the footer takes full width */
     }
+    .footer-content {
+      display: inline-block;
+      text-align: center;
+      }
   </style>
   <script src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
 </head>
@@ -78,8 +83,12 @@
     ${table_content}
 
     <footer class="footer">
-      Fuelfix - ${current_year}<br> 5 Excellence Drive Wangarra WA 6065<br> Phone: 1300 734 764
-    </footer>
+    <div class="footer-content">
+      Fuelfix - ${current_year}<br>
+      5 Excellence Drive Wangarra WA 6065<br>
+      Phone: 1300 734 764
+    </div>
+  </footer>
   </div>
 
   <!-- Script for generating the chart -->
