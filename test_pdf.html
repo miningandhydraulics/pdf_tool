@@ -47,24 +47,27 @@
     series: ${chart_series}
   }, {
     fullWidth: true,
-    showArea: false, // Changed to false to better visualize overlapping lines
+    showArea: false, // Set to false for better line visibility
     chartPadding: {
-      right: 40 // Adjust padding to ensure all labels are visible
+      right: 30, // Adjusted padding
+      left: 20
     },
     axisX: {
       showGrid: true,
-      labelInterpolationFnc: function(value, index) {
-        // Display only the last 8 labels
-        return index % Math.ceil(${chart_labels}.length / 8) === 0 ? value : null;
+      labelInterpolationFnc: function(value, index, labels) {
+        var labelCount = labels.length;
+        var step = Math.floor(labelCount / 8); // Adjust step to show more labels if needed
+        return index % step === 0 ? value : null;
       }
     },
     axisY: {
       showGrid: true,
-      scaleMinSpace: 20 // Adjust for better y-axis scaling
+      labelInterpolationFnc: Chartist.noop
     },
-    plugins: [
-      Chartist.plugins.tooltip() // Optional: if you want tooltips
-    ]
+    lineSmooth: Chartist.Interpolation.simple({
+      divisor: 2
+    }),
+    low: 0
   });
   </script>
 </body>
