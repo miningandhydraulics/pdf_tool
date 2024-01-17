@@ -66,9 +66,13 @@
 
   <!-- Script for generating the chart -->
   <script>
+  // Parse the data from the template literals
+  var chartLabels = JSON.parse('${chart_labels}');
+  var chartSeries = JSON.parse('${chart_series}');
+
   new Chartist.Line('#iso-chart', {
-    labels: ${chart_labels},
-    series: ${chart_series}
+    labels: chartLabels,
+    series: chartSeries
   }, {
     fullWidth: true,
     showArea: false,
@@ -90,22 +94,8 @@
     lineSmooth: Chartist.Interpolation.simple({
       divisor: 2
     }),
-    low: 0,
-    plugins: [
-      Chartist.plugins.legend({
-        legendNames: ['ISO4', 'ISO6', 'ISO14']
-      })
-    ]
-  }, [
-    // Responsive options
-    ['screen and (max-width: 640px)', {
-      axisX: {
-        labelInterpolationFnc: function(value, index) {
-          return index % 2 === 0 ? value : null;
-        }
-      }
-    }]
-  ]);
+    low: 0
+  });
   </script>
 </body>
 </html>
