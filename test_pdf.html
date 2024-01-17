@@ -3,192 +3,56 @@
   <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
   <style>
-    body, html {
-      color: #181818;
-      font-family: 'Fira Sans', sans-serif;
-      margin: 0;
-      padding: 0 20px;
-      --main-color: ${main_color};
-    }
-    table {
-      border-collapse: collapse;
-      margin-top: 40px;
-      width: 100%;
-    }
-    table caption {
-      color: rgba(0,0,0,.65);
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 15px;
-    }
-    td {
-      border-bottom: 1px solid #ddd;
+    /* ... [existing styles] ... */
+    .iso-box {
       padding: 10px;
-    }
-    tr:last-of-type td {
-      border: none;
-    }
-    th {
-      color: var(--main-color);
-      padding: 10px;
-      text-align: left;
-    }
-    img {
-      height: 50px;
-      max-width: 100%;
-    }
-    h1 {
-      margin-right: 10px;
-    }
-    hr {
-      border-color: var(--main-color);
-      margin-bottom: 30px;
-    }
-    .container {
-      background-color: hsl(0deg 0% 98%);
-      border-radius: 10px;
-    }
-    .pdf-header {
-      align-items: center;
-      background-image: url(${background_img_url});
-      background-position: 0 -200;
-      background-size: cover;
-      border-top-left-radius: 10px;
-      border-top-right-radius: 10px;
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      margin-top: 20px;
-      padding: 15px 30px;
-      text-align: center;
-    }
-    .pdf-header h1 {
-      background-color: #fff;
-      border-radius: 1px;
-      padding: 5px 10px;
-    }
-    .pdf-header > p {
-      background-color: #fff;
-      border-radius: 1px;
-      padding: 5px 10px;
-    }
-    .info-container {
-      background-position: 0 -100;
-      border: 1px solid hsla(0,0%,90.2%,.44);
-      display: flex;
-      height: 270px;
-      padding: 10px 0;
-    }
-    .summary {
-      border-left: 1px solid hsla(0,0%,90.2%,.44);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 15px 10px;
-      width: 30%;
-    }
-    .summary p, strong {
-      color: rgba(0,0,0,.57);
-    }
-    .info-card {
-      padding: 0 8px;
-    }
-    .harvest-info {
-      padding: 10px 15px;
-      width: 70%;
-    }
-    .harvest-info h3 {
-      color: rgba(0,0,0,.57);
-      margin-block-start: 0;
-      margin-bottom: 0;
-    }
-    .line-chart{
-      width: 100%;
-    }
-    .ct-series-a .ct-line {
-      stroke: var(--main-color);
-      stroke-width: 3px;
-    }
-    .ct-series-a .ct-point {
-      stroke: var(--main-color);
-    }
-    .ct-series-a .ct-area {
-      fill: var(--main-color);
-    }
-    .cta {
-      align-items: center;
-      background-color: var(--main-color);
-      display: flex;
-      justify-content: center;
-      margin-top: 20px;
-      width: 100%;
-    }
-    .cta a {
-      color: #f8f8f8;
-      font-weight: bold;
-      letter-spacing: 2px;
-      padding: 15px 20px;
-      text-align: center;
-      text-decoration: none;
-      width: 100%;
-    }
-    .footer {
-      align-items: center;
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      margin-top: 20px;
-      padding: 15px 30px;
-      text-align: center;
-    }
-    .table thead {
-      background-color: hsla(0,0%,90.2%,.30);
-      border: 1px solid hsla(0,0%,90.2%,.44);
-    }
-
-    /* Additional styles for the ISO4 chart */
-    .line-chart-iso4 {
-      width: 100%;
-      margin-top: 20px;
+      margin: 10px 0;
+      color: #fff;
+      border-radius: 5px;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
 </head>
 <body>
   <div class="container">
-
     <header class="pdf-header">
-      <h1>Report Content</h1>
+      <img src="https://github.com/miningandhydraulics/pdf_tool/blob/main/FuelFix-Logo.png?raw=true" alt="Logo" style="height: 50px;">
+      <h1>Fuelfix Diesel Dispense Report</h1>
       <p>${full_date}</p>
     </header>
 
-    <!-- Section for each variable -->
-    ${variables_content}
+    <!-- ISO Boxes -->
+    <div class="iso-box" style="background-color: ${iso4_color};">ISO4 Average: ${iso4_avg}</div>
+    <div class="iso-box" style="background-color: ${iso6_color};">ISO6 Average: ${iso6_avg}</div>
+    <div class="iso-box" style="background-color: ${iso14_color};">ISO14 Average: ${iso14_avg}</div>
 
-    <!-- ISO4 Chart Section -->
-    <div class="chart-section-iso4">
-      <h3>Average ISO - Last 7 Days</h3>
-      <section class="line-chart-iso4" id="iso4-chart"></section>
+    <!-- Line Chart Section -->
+    <div class="chart-section">
+      <h2>ISO4, ISO6, ISO14 Chart</h2>
+      <section class="line-chart" id="iso-chart"></section>
     </div>
 
+    <!-- Table Section -->
+    ${table_content}
+
     <footer class="footer">
-      Your Company - ${current_year}
+      Fuelfix - ${current_year}<br> 5 Excellence Drive Wangarra WA 6065<br> Phone: 1300 734 764
     </footer>
   </div>
 
-  <!-- Script for generating ISO4 chart -->
+  <!-- Script for generating the chart -->
   <script>
-    new Chartist.Line('#iso4-chart', {
-      labels: ${iso4_chart_labels},
-      series: [${iso4_chart_data}]
+    new Chartist.Line('#iso-chart', {
+      labels: ${chart_labels},
+      series: ${chart_series}
     }, {
       fullWidth: true,
       showArea: true,
       axisX: {
-        showGrid: false
+        showGrid: true
       },
       axisY: {
-        showGrid: false
+        showGrid: true
       }
     });
   </script>
