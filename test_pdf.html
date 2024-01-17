@@ -4,15 +4,30 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
   <style>
     .chart-section {
-    width: 100%; /* Use 100% of the container width */
-    max-width: 190mm; /* Adjust based on your PDF's actual visible area */
-    margin: 0 auto; /* Center the chart if there's extra space */
-  }
+      width: 100%; /* Use 100% of the container width */
+      max-width: 190mm; /* Adjust based on your PDF's actual visible area */
+      margin: 0 auto; /* Center the chart if there's extra space */
+    }
     .iso-box {
       padding: 10px;
       margin: 10px 0;
       color: #fff;
       border-radius: 5px;
+    }
+    .chart-legend {
+      text-align: center;
+      margin-top: 10px;
+    }
+    .chart-legend .legend-item {
+      display: inline-block;
+      margin-right: 10px;
+    }
+    .chart-legend .legend-item i {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin-right: 5px;
+      border-radius: 50%;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
@@ -34,6 +49,11 @@
     <div class="chart-section">
       <h2>ISO4, ISO6, ISO14 Chart</h2>
       <section class="line-chart" id="iso-chart"></section>
+      <div class="chart-legend">
+        <span class="legend-item"><i style="background: #FFA500;"></i> ISO4 (Orange)</span>
+        <span class="legend-item"><i style="background: #0000FF;"></i> ISO6 (Blue)</span>
+        <span class="legend-item"><i style="background: #800080;"></i> ISO14 (Purple)</span>
+      </div>
     </div>
 
     <!-- Table Section -->
@@ -46,43 +66,41 @@
 
   <!-- Script for generating the chart -->
   <script>
-  new Chartist.Line('#iso-chart', {
-    labels: ${chart_labels},
-    series: ${chart_series}
-  }, {
-    fullWidth: true,
-    showArea: false,
-    chartPadding: {
-      right: 10,
-      left: 10
-    },
-    axisX: {
-      showGrid: true,
-      labelInterpolationFnc: function(value, index) {
-        // Display all labels, adjust if necessary
-        return value;
-      }
-    },
-    axisY: {
-      showGrid: true,
-      onlyInteger: true,
-      offset: 20
-    },
-    lineSmooth: Chartist.Interpolation.simple({
-      divisor: 2
-    }),
-    low: 0
-  }, [
-    // Responsive options
-    ['screen and (max-width: 640px)', {
+    new Chartist.Line('#iso-chart', {
+      labels: ${chart_labels},
+      series: ${chart_series}
+    }, {
+      fullWidth: true,
+      showArea: false,
+      chartPadding: {
+        right: 10,
+        left: 10
+      },
       axisX: {
+        showGrid: true,
         labelInterpolationFnc: function(value, index) {
-          // Adjust how labels are displayed for smaller screens
-          return index % 2 === 0 ? value : null;
+          return value;
         }
-      }
-    }]
-  ]);
+      },
+      axisY: {
+        showGrid: true,
+        onlyInteger: true,
+        offset: 20
+      },
+      lineSmooth: Chartist.Interpolation.simple({
+        divisor: 2
+      }),
+      low: 0
+    }, [
+      // Responsive options
+      ['screen and (max-width: 640px)', {
+        axisX: {
+          labelInterpolationFnc: function(value, index) {
+            return index % 2 === 0 ? value : null;
+          }
+        }
+      }]
+    ]);
   </script>
 </body>
 </html>
