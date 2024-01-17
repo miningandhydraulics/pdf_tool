@@ -42,19 +42,30 @@
 
   <!-- Script for generating the chart -->
   <script>
-    new Chartist.Line('#iso-chart', {
-      labels: ${chart_labels},
-      series: ${chart_series}
-    }, {
-      fullWidth: true,
-      showArea: true,
-      axisX: {
-        showGrid: true
-      },
-      axisY: {
-        showGrid: true
+  new Chartist.Line('#iso-chart', {
+    labels: ${chart_labels},
+    series: ${chart_series}
+  }, {
+    fullWidth: true,
+    showArea: false, // Changed to false to better visualize overlapping lines
+    chartPadding: {
+      right: 40 // Adjust padding to ensure all labels are visible
+    },
+    axisX: {
+      showGrid: true,
+      labelInterpolationFnc: function(value, index) {
+        // Display only the last 8 labels
+        return index % Math.ceil(${chart_labels}.length / 8) === 0 ? value : null;
       }
-    });
+    },
+    axisY: {
+      showGrid: true,
+      scaleMinSpace: 20 // Adjust for better y-axis scaling
+    },
+    plugins: [
+      Chartist.plugins.tooltip() // Optional: if you want tooltips
+    ]
+  });
   </script>
 </body>
 </html>
