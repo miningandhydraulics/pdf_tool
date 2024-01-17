@@ -10,6 +10,7 @@
     }
     .ct-chart {
       padding-bottom: 20px; /* Add padding below the chart */
+      height: 300px; /* Adjust the height of the chart as needed */
     }
     .iso-box {
       padding: 10px;
@@ -55,6 +56,12 @@
       display: inline-block;
       text-align: center;
     }
+
+    /* Page Break Style */
+    .page-break {
+      display: block;
+      page-break-before: always;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
 </head>
@@ -71,26 +78,11 @@
     <div class="iso-box" style="background-color: ${iso6_color};">ISO6 Average: ${iso6_avg}</div>
     <div class="iso-box" style="background-color: ${iso14_color};">ISO14 Average: ${iso14_avg}</div>
 
+    <!-- Page Break -->
+    <div class="page-break"></div>
+
     <!-- Line Chart Section -->
     <div class="chart-section">
-      <!-- New Content Start -->
-      <div style="padding: 10px; border: 1px solid #e0e0e0; margin-bottom: 15px; display: flex; justify-content: space-between;">
-          <div style="font-weight: bold; margin-bottom: 10px; flex: 1;">ISO 4 (≥ 4 µm):</div>
-          <div style="margin-bottom: 5px; flex: 2; display: flex; justify-content: space-between;">
-              <span style="display: flex; align-items: center;">
-                  <span style="display: inline-block; width: 10px; height: 10px; border-radius: 5px; margin-left: 10px; margin-right: 5px; background-color: green;"></span>Green (Good): 16 or lower
-              </span>
-              <span style="display: flex; align-items: center;">
-                  <span style="display: inline-block; width: 10px; height: 10px; border-radius: 5px; margin-left: 10px; margin-right: 5px; background-color: orange;"></span>Orange (Caution): 17-20
-              </span>
-              <span style="display: flex; align-items: center;">
-                  <span style="display: inline-block; width: 10px; height: 10px; border-radius: 5px; margin-left: 10px; margin-right: 5px; background-color: red;"></span>Red (Critical): 21 or higher
-              </span>
-          </div>
-      </div>
-      <!-- ... similar divs for ISO 6 and ISO 14 ... -->
-      <!-- New Content End -->
-
       <h2>Raw ISO Chart</h2>
       <section class="line-chart" id="iso-chart"></section>
       <div class="chart-legend">
