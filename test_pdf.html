@@ -9,8 +9,8 @@
       margin-bottom: 20px; /* Add space below the chart */
     }
     .ct-chart {
-    padding-bottom: 20px; /* Add padding below the chart */
-      }
+      padding-bottom: 20px; /* Add padding below the chart */
+    }
     .iso-box {
       padding: 10px;
       margin: 10px 0;
@@ -54,11 +54,26 @@
     .footer-content {
       display: inline-block;
       text-align: center;
-      }
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
 </head>
 <body>
+  <!-- New Content Start -->
+  <div style="padding: 10px; border: 1px solid #e0e0e0; margin-bottom: 15px; display: flex; justify-content: space-between;">
+      <!-- Content for ISO 4 -->
+      <!-- ... -->
+  </div>
+  <div style="padding: 10px; border: 1px solid #e0e0e0; margin-bottom: 15px; display: flex; justify-content: space-between;">
+      <!-- Content for ISO 6 -->
+      <!-- ... -->
+  </div>
+  <div style="padding: 10px; border: 1px solid #e0e0e0; margin-bottom: 15px; display: flex; justify-content: space-between;">
+      <!-- Content for ISO 14 -->
+      <!-- ... -->
+  </div>
+  <!-- New Content End -->
+
   <div class="container">
     <header class="pdf-header">
       <img src="https://github.com/miningandhydraulics/pdf_tool/blob/main/FuelFix-Logo.png?raw=true" alt="Logo" style="height: 50px;">
@@ -86,12 +101,12 @@
     ${table_content}
 
     <footer class="footer">
-    <div class="footer-content">
-      Fuelfix - ${current_year}<br>
-      5 Excellence Drive Wangarra WA 6065<br>
-      Phone: 1300 734 764
-    </div>
-  </footer>
+      <div class="footer-content">
+        Fuelfix - ${current_year}<br>
+        5 Excellence Drive Wangarra WA 6065<br>
+        Phone: 1300 734 764
+      </div>
+    </footer>
   </div>
 
   <!-- Script for generating the chart -->
