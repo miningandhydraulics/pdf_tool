@@ -63,22 +63,24 @@
       page-break-before: always;
     }
 
-    /* Additional styles for ISO threshold boxes */
+    /* Adjusted styles for ISO threshold boxes */
     .iso-threshold-box {
-      padding: 10px;
+      padding: 5px; /* Reduced padding */
       border: 1px solid #e0e0e0;
-      margin-bottom: 15px;
+      margin-bottom: 10px; /* Reduced margin */
       display: flex;
-      justify-content: space-between;
+      align-items: center; /* Align items vertically */
     }
 
     .iso-threshold-box > div {
-      flex: 1;
+      flex: 0 0 auto; /* Adjust flex settings */
+      margin-right: 10px; /* Add some space between text and color indicators */
     }
 
     .iso-threshold-box span {
       display: flex;
       align-items: center;
+      margin-right: 10px; /* Space between each indicator */
     }
 
     .iso-threshold-box span span {
@@ -86,8 +88,7 @@
       width: 10px;
       height: 10px;
       border-radius: 5px;
-      margin-left: 10px;
-      margin-right: 5px;
+      margin-right: 5px; /* Space between color box and text */
     }
   </style>
   <script src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
