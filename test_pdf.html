@@ -44,31 +44,40 @@
   <script>
   new Chartist.Line('#iso-chart', {
     labels: ${chart_labels},
-    series: ${chart_series} // Make sure this is an array of arrays
+    series: ${chart_series}
   }, {
     fullWidth: true,
-    showArea: false, // Set to false for line-only chart
+    showArea: false,
     chartPadding: {
-      right: 40,
-      left: 20
+      right: 15,
+      left: 15
     },
     axisX: {
       showGrid: true,
       labelInterpolationFnc: function(value, index) {
-        // Optional: Adjust label display for clarity
-        return index % Math.ceil(${chart_labels}.length / 10) === 0 ? value : null;
+        return value; // Display all labels
       }
     },
     axisY: {
       showGrid: true,
-      onlyInteger: true, // Optional: Display only integer values on Y-axis
+      onlyInteger: true,
       offset: 20
     },
     lineSmooth: Chartist.Interpolation.simple({
       divisor: 2
     }),
-    low: 0 // Optional: Adjust based on your data
-  });
+    low: 0
+  }, [
+    // Responsive options
+    ['screen and (max-width: 640px)', {
+      axisX: {
+        labelInterpolationFnc: function(value, index) {
+          // Adjust how labels are displayed for smaller screens
+          return index % 2 === 0 ? value : null;
+        }
+      }
+    }]
+  ]);
   </script>
 </body>
 </html>
