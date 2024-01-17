@@ -69,7 +69,10 @@
   // Parse the data from the template literals
   var chartLabels = JSON.parse('${chart_labels}');
   var chartSeries = JSON.parse('${chart_series}');
-
+    
+    console.log(chartSeries)
+    console.log(chartLabels)
+    
   new Chartist.Line('#iso-chart', {
     labels: chartLabels,
     series: chartSeries
