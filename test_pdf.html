@@ -29,6 +29,19 @@
       margin-right: 5px;
       border-radius: 50%;
     }
+    /* Styles for table pagination */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      page-break-inside: auto;
+    }
+    tr    { page-break-inside:avoid; page-break-after:auto }
+    thead { display:table-header-group }
+    tfoot { display:table-footer-group }
+    th, td {
+      border: 1px solid black;
+      padding: 5px;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
 </head>
@@ -66,39 +79,38 @@
 
   <!-- Script for generating the chart -->
   <script>
-  // Parse the data from the template literals
-  var chartLabels = JSON.parse('${chart_labels}');
-  var chartSeries = JSON.parse('${chart_series}');
+    var chartLabels = JSON.parse('${chart_labels}');
+    var chartSeries = JSON.parse('${chart_series}');
     
-    console.log(chartSeries)
-    console.log(chartLabels)
+    console.log(chartSeries);
+    console.log(chartLabels);
     
-  new Chartist.Line('#iso-chart', {
-    labels: chartLabels,
-    series: chartSeries
-  }, {
-    fullWidth: true,
-    showArea: false,
-    chartPadding: {
-      right: 10,
-      left: 10
-    },
-    axisX: {
-      showGrid: true,
-      labelInterpolationFnc: function(value, index) {
-        return value;
-      }
-    },
-    axisY: {
-      showGrid: true,
-      onlyInteger: true,
-      offset: 20
-    },
-    lineSmooth: Chartist.Interpolation.simple({
-      divisor: 2
-    }),
-    low: 0
-  });
+    new Chartist.Line('#iso-chart', {
+      labels: chartLabels,
+      series: chartSeries
+    }, {
+      fullWidth: true,
+      showArea: false,
+      chartPadding: {
+        right: 10,
+        left: 10
+      },
+      axisX: {
+        showGrid: true,
+        labelInterpolationFnc: function(value, index) {
+          return value;
+        }
+      },
+      axisY: {
+        showGrid: true,
+        onlyInteger: true,
+        offset: 20
+      },
+      lineSmooth: Chartist.Interpolation.simple({
+        divisor: 2
+      }),
+      low: 0
+    });
   </script>
 </body>
 </html>
