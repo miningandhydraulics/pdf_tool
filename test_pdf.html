@@ -167,9 +167,11 @@
       <h3>Analysis and Findings:</h3>
       <p>The ISO cleanliness levels for the diesel dispensed are as follows:</p>
       <ul>
-        <p>ISO 4: The current level is ${iso4_avg}, which falls within the [Good/Caution/Critical for ISO 4] category.</p>
-        <li>ISO 6: With a level of ${iso6_value}, the fuel is categorized as ${iso6_color}, suggesting that it is [Good/Caution/Critical] for particles of 6 µm and larger.</li>
-        <li>ISO 14: The level of ${iso14_value} places the fuel in the ${iso14_color} category, showing that it is [Good/Caution/Critical] for particles of 14 µm and larger.</li>
+        <li>ISO 4: The current level is ${iso4_avg}, which falls within the <span style="color: ${iso4_color};">${iso4_text}</span> category.</li>
+        <li>ISO 6: The current level is ${iso6_avg}, which falls within the <span style="color: ${iso6_color};">${iso6_text}</span> category.</li>
+        <li>ISO 14: The current level is ${iso14_avg}, which falls within the <span style="color: ${iso14_color};">${iso14_text}</span> category.</li>
+</ul>
+
       </ul>
 
       <h3>Recommendations:</h3>
