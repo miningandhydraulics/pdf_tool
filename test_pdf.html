@@ -26,6 +26,9 @@
       display: inline-block;
       margin-right: 10px;
     }
+    .chart-container {
+  page-break-inside: avoid; /* Avoid page break inside this container */
+}
     .chart-legend .legend-item i {
       display: inline-block;
       width: 12px;
@@ -186,15 +189,15 @@
 <!-- Page Break -->
     
     <!-- Line Chart Section -->
-    <div class="chart-section">
-      <h2>Raw ISO Chart</h2>
-      <section class="line-chart" id="iso-chart"></section>
-      <div class="chart-legend">
-        <span class="legend-item"><i style="background: #FFA500;"></i> ISO4 (Orange)</span>
-        <span class="legend-item"><i style="background: #0000FF;"></i> ISO6 (Blue)</span>
-        <span class="legend-item"><i style="background: #800080;"></i> ISO14 (Purple)</span>
-      </div>
-    </div>
+<div class="chart-container">
+  <h2>Raw ISO Chart</h2>
+  <section class="line-chart" id="iso-chart"></section>
+  <div class="chart-legend">
+    <span class="legend-item"><i style="background: #FFA500;"></i> ISO4 (Orange)</span>
+    <span class="legend-item"><i style="background: #0000FF;"></i> ISO6 (Blue)</span>
+    <span class="legend-item"><i style="background: #800080;"></i> ISO14 (Purple)</span>
+  </div>
+</div>
 
     <!-- Table Section -->
     ${table_content}
