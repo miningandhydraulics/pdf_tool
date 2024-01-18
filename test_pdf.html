@@ -222,7 +222,7 @@
 
     <footer class="footer">
       <div class="footer-content">
-        Fuelfix - ${current_year}<br>
+        Fuelfix - <span id="current-year"></span><br>
         5 Excellence Drive Wangarra WA 6065<br>
         Phone: 1300 734 764
       </div>
@@ -264,5 +264,8 @@
       low: 0
     });
   </script>
+    <script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
 </body>
 </html>
