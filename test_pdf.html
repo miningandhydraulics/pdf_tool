@@ -98,11 +98,11 @@
 </head>
 <body>
   <div class="container">
-    <header class="pdf-header">
-      <img src="https://github.com/miningandhydraulics/pdf_tool/blob/main/FuelFix-Logo.png?raw=true" alt="Logo" style="height: 50px;">
-      <h1>Fuelfix Diesel Dispense Report</h1>
-      <p>${full_date}</p>
-    </header>
+    <div class="header">
+  <img src="https://github.com/miningandhydraulics/pdf_tool/blob/main/FuelFix-Logo.png?raw=true" alt="Logo" style="height: 50px;">
+  <h1 class="centered-title">Fuelfix Diesel Dispense Report</h1>
+  <p class="report-date">Report Date: ${full_date}</p>
+</div>
 
     <!-- ISO Boxes -->
     <div class="iso-box" style="background-color: ${iso4_color};">ISO4 Average: ${iso4_avg}</div>
