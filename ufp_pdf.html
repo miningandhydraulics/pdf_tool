@@ -1,185 +1,274 @@
-const { Analysis, Device, Services, Utils } = require("@tago-io/sdk");
-const axios = require("axios");
-const moment = require("moment-timezone");
-
-// Function to determine recommendations based on ISO values
-function getRecommendations(isoValue, thresholds) {
-  if (isoValue <= thresholds.green) {
-    return "Maintain current filtration system. Regularly monitor to ensure continued effectiveness.";
-  } else if (isoValue <= thresholds.orange) {
-    return "Consider upgrading to a higher efficiency filtration system to remove finer particles.";
-  } else {
-    return "Immediate action required. Implement high-efficiency filtration and conduct a system flush to remove existing contamination.";
-  }
-}
-
-async function myAnalysis(context) {
-  try {
-    const env_vars = Utils.envToJson(context.environment);
-
-    if (!env_vars.email) {
-      return context.log("Email environment variable not found");
+<html>
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
+  <style>
+    .chart-section {
+      width: 100%; /* Use 100% of the container width */
+      max-width: 190mm; /* Adjust based on your PDF's actual visible area */
+      margin-bottom: 20px; /* Add space below the chart */
     }
-    if (!env_vars.device_token) {
-      return context.log("Device_token environment variable not found");
+    .ct-chart {
+      padding-bottom: 20px; /* Add padding below the chart */
+      height: 300px; /* Adjust the height of the chart as needed */
+    }
+    .iso-box {
+      padding: 10px;
+      margin: 10px 0;
+      color: #fff;
+      border-radius: 5px;
+    }
+    .centered-title {
+  text-align: center;
+}
+.root-cause-title {
+  margin-top: 20px; /* Adjust the value as needed for spacing */
+}
+.report-date {
+  text-align: center;
+}
+    .chart-legend {
+      text-align: center;
+      margin-top: 10px;
+    }
+    .chart-legend .legend-item {
+      display: inline-block;
+      margin-right: 10px;
+    }
+    .chart-container {
+  page-break-inside: avoid; /* Avoid page break inside this container */
+}
+    .chart-legend .legend-item i {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin-right: 5px;
+      border-radius: 50%;
+    }
+    .centered-title {
+  text-align: center;
+}
+
+.report-date {
+  text-align: center; /* Center align if you want the date centered as well */
+}
+    /* Styles for table pagination */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      page-break-inside: auto;
+    }
+    tr    { page-break-inside:avoid; page-break-after:auto }
+    thead { display:table-header-group }
+    tfoot { display:table-footer-group }
+    th, td {
+      border: 1px solid black;
+      padding: 5px;
+    }
+    /* Styles for the footer */
+    .footer {
+      text-align: center; /* Center align the footer content */
+      margin-top: 20px;
+      width: 100%; /* Ensure the footer takes full width */
+    }
+    .footer-content {
+      display: inline-block;
+      text-align: center;
     }
 
-    const device = new Device({ token: env_vars.device_token });
-    const variables = ["total_bubbles", "fibre", "total_particles", "iso4", "iso6", "iso14", "cutting", "sliding", "fatigue", "air", "unknown"];
+    /* Page Break Style */
+    .page-break {
+      display: block;
+      page-break-before: always;
+    }
 
-    const today_date = moment().tz("Australia/Perth");
-    const start_date = moment(today_date).subtract(7, 'days').format("YYYY-MM-DDTHH:mm:ss");
-    const end_date = today_date.format("YYYY-MM-DDTHH:mm:ss");
-    const full_date = today_date.format("YYYY-MM-DD"); // Format the date as needed
+    /* Adjusted styles for ISO threshold boxes */
+    .iso-threshold-box {
+      padding: 5px; /* Reduced padding */
+      border: 1px solid #e0e0e0;
+      margin-bottom: 10px; /* Reduced margin */
+      display: flex;
+      align-items: center; /* Align items vertically */
+    }
 
-    const data = await device.getData({
-      variables,
-      start_date,
-      end_date,
-      qty: 8, // Fetching last 8 readings
-    });
+    .iso-threshold-box > div {
+      flex: 0 0 auto; /* Adjust flex settings */
+      margin-right: 10px; /* Add some space between text and color indicators */
+    }
 
-    let reportContent = variables.map(variable => {
-      const variableData = data.filter(item => item.variable === variable);
-      return {
-        variable,
-        values: variableData.map(d => ({
-          value: d.value,
-          timestamp: moment(d.timestamp).tz("Australia/Perth").format("YYYY-MM-DD HH:mm:ss")
-        }))
-      };
-    });
+    .iso-threshold-box span {
+      display: flex;
+      align-items: center;
+      margin-right: 10px; /* Space between each indicator */
+    }
 
-    // Prepare chart data with custom series names for colors
-    const isoChartData = {
-      labels: reportContent.find(item => item.variable === 'iso4').values.map(d => d.timestamp),
-      series: [
-        reportContent.find(item => item.variable === 'iso4').values.map(d => d.value),
-        reportContent.find(item => item.variable === 'iso6').values.map(d => d.value),
-        reportContent.find(item => item.variable === 'iso14').values.map(d => d.value)
-  ]
-};
+    .iso-threshold-box span span {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 5px;
+      margin-right: 5px; /* Space between color box and text */
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+  <img src="https://github.com/miningandhydraulics/pdf_tool/blob/main/ufp-logo.png?raw=true" alt="Logo" style="height: 50px;">
+  <h1 class="centered-title">Fuelfix Diesel Dispense Report</h1>
+  <p class="report-date">Report Date: ${full_date}</p>
+</div>
 
-    // Prepare table data
-    const tableVariables = ["fibre", "cutting", "sliding", "fatigue", "air", "unknown"];
-    let tableContent = tableVariables.map(variable => {
-      return {
-        variable,
-        values: reportContent.find(item => item.variable === variable).values.map(d => d.value)
-      };
-    });
+    <!-- ISO Readings Title -->
+<h2>ISO Readings</h2>
+    
+    <!-- ISO Boxes -->
+    <div class="iso-box" style="background-color: ${iso4_color};">ISO4 Average: ${iso4_avg}</div>
+    <div class="iso-box" style="background-color: ${iso6_color};">ISO6 Average: ${iso6_avg}</div>
+    <div class="iso-box" style="background-color: ${iso14_color};">ISO14 Average: ${iso14_avg}</div>
 
-    // Define thresholds for each ISO value
-    const thresholds = {
-      iso4: { green: 10, orange: 20, red: 30 },
-      iso6: { green: 15, orange: 25, red: 35 },
-      iso14: { green: 20, orange: 30, red: 40 }
-    };
+    <!-- New ISO Threshold Boxes -->
+    <div class="iso-threshold-box">
+        <div style="font-weight: bold; margin-bottom: 10px;">ISO 4 (≥ 4 µm):</div>
+        <div style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+            <span>
+                <span style="background-color: green;"></span>Green (Good): 16 or lower
+            </span>
+            <span>
+                <span style="background-color: orange;"></span>Orange (Caution): 17-20
+            </span>
+            <span>
+                <span style="background-color: red;"></span>Red (Critical): 21 or higher
+            </span>
+        </div>
+    </div>
+    <div class="iso-threshold-box">
+        <div style="font-weight: bold; margin-bottom: 10px;">ISO 6 (≥ 6 µm):</div>
+        <div style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+            <span>
+                <span style="background-color: green;"></span>Green (Good): 13 or lower
+            </span>
+            <span>
+                <span style="background-color: orange;"></span>Orange (Caution): 14-16
+            </span>
+            <span>
+                <span style="background-color: red;"></span>Red (Critical): 17 or higher
+            </span>
+        </div>
+    </div>
+    <div class="iso-threshold-box">
+        <div style="font-weight: bold; margin-bottom: 10px;">ISO 14 (≥ 14 µm):</div>
+        <div style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+            <span>
+                <span style="background-color: green;"></span>Green (Good): 10 or lower
+            </span>
+            <span>
+                <span style="background-color: orange;"></span>Orange (Caution): 11-12
+            </span>
+            <span>
+                <span style="background-color: red;"></span>Red (Critical): 13 or higher
+            </span>
+        </div>
+    </div>
 
-    // Function to determine the background color
-    function getStatusAndColor(value, thresholds) {
-  if (value <= thresholds.green) {
-    return { text: 'Good', color: '#00ff00' }; // Green
-  } else if (value <= thresholds.orange) {
-    return { text: 'Caution', color: '#ffa500' }; // Orange
-  } else {
-    return { text: 'Critical', color: '#ff0000' }; // Red
-  }
-}
+    <!-- Page Break -->
+    <div class="page-break"></div>
+<!-- Brief Report Section -->
+    <div class="report-section">
+      <h2>Report Overview</h2>
+      <p>This report provides an analysis of the diesel dispense quality as measured by ISO cleanliness standards. The data reflects the particle count in the diesel, categorized by size, and is crucial for assessing the quality and purity of the fuel.</p>
 
-    // Calculate averages and determine background colors
-    const iso4Avg = Math.round(reportContent.find(item => item.variable === 'iso4').values.reduce((acc, val) => acc + val.value, 0) / 8);
-    const iso6Avg = Math.round(reportContent.find(item => item.variable === 'iso6').values.reduce((acc, val) => acc + val.value, 0) / 8);
-    const iso14Avg = Math.round(reportContent.find(item => item.variable === 'iso14').values.reduce((acc, val) => acc + val.value, 0) / 8);
+      <h3>ISO Cleanliness Levels:</h3>
+      <ul>
+        <li>ISO 4 (≥ 4 µm): ${iso4_avg}</li>
+        <li>ISO 6 (≥ 6 µm): ${iso6_avg}</li>
+        <li>ISO 14 (≥ 14 µm): ${iso14_avg}</li>
+      </ul>
 
-    const iso4Status = getStatusAndColor(iso4Avg, thresholds.iso4);
-    const iso6Status = getStatusAndColor(iso6Avg, thresholds.iso6);
-    const iso14Status = getStatusAndColor(iso14Avg, thresholds.iso14);
+      <h3>Analysis and Findings:</h3>
+<p>The ISO cleanliness levels for the diesel dispensed are as follows:</p>
+<ul>
+  <li>ISO 4: The current level is ${iso4_avg}, which falls within the [Good/Caution/Critical for ISO 4] category.</li>
+  <li>ISO 6: The current level is ${iso6_avg}, which falls within the [Good/Caution/Critical for ISO 6] category.</li>
+  <li>ISO 14: The current level is ${iso14_avg}, which falls within the [Good/Caution/Critical for ISO 14] category.</li>
+</ul>
+      <h3>Recommendations:</h3>
+      <p>Based on the ISO cleanliness levels, we recommend the following actions:</p>
+      <ul>
+        <li>[Specific actions based on ISO 4 value]</li>
+        <li>[Specific actions based on ISO 6 value]</li>
+        <li>[Specific actions based on ISO 14 value]</li>
+      </ul>
 
-// Determine recommendations for each ISO value
-    const iso4Recommendation = getRecommendations(iso4Avg, thresholds.iso4);
-    const iso6Recommendation = getRecommendations(iso6Avg, thresholds.iso6);
-    const iso14Recommendation = getRecommendations(iso14Avg, thresholds.iso14);
+      <h3>Conclusion:</h3>
+      <p>Maintaining optimal fuel cleanliness is crucial for the efficient operation of diesel-powered machinery. Regular monitoring and adherence to ISO cleanliness standards ensure the longevity and reliability of the equipment. This report underscores the importance of ongoing quality checks and the need for appropriate measures to maintain or improve fuel purity.</p>
+    </div>
+    
+<!-- Page Break -->
+    
+    <!-- Line Chart Section -->
+<div class="chart-container">
+  <h2>Raw ISO Chart</h2>
+  <section class="line-chart" id="iso-chart"></section>
+  <div class="chart-legend">
+    <span class="legend-item"><i style="background: #FFA500;"></i> ISO4 (Orange)</span>
+    <span class="legend-item"><i style="background: #0000FF;"></i> ISO6 (Blue)</span>
+    <span class="legend-item"><i style="background: #800080;"></i> ISO14 (Purple)</span>
+  </div>
+  
+<!-- Root Cause Analysis Title -->
+<h2 class="root-cause-title">Root Cause Analysis</h2>
 
-    // Fetch the external HTML template
-    const pdf_template_url = "https://raw.githubusercontent.com/miningandhydraulics/pdf_tool/main/test_pdf.html";
-    let html = (await axios.get(pdf_template_url)).data;
+    <!-- Table Section -->
+    ${table_content}
 
-    // Replace placeholders in the HTML template with your data
-    html = html.replace(/\$\{iso4_avg\}/g, iso4Avg);
-    html = html.replace(/\$\{iso6_avg\}/g, iso6Avg);
-    html = html.replace(/\$\{iso14_avg\}/g, iso14Avg);
-    html = html.replace(/\$\{iso4_color\}/g, iso4Status.color);
-    html = html.replace(/\$\{iso6_color\}/g, iso6Status.color);
-    html = html.replace(/\$\{iso14_color\}/g, iso14Status.color);
-    html = html.replace(/\$\{chart_labels\}/g, JSON.stringify(isoChartData.labels));
-    html = html.replace(/\$\{chart_series\}/g, JSON.stringify(isoChartData.series));
-    html = html.replace(/\$\{table_content\}/g, generateTableHTML(tableContent));
-    html = html.replace(/\$\{full_date\}/g, full_date); // Replace the full_date placeholder
-    html = html.replace(/\[Good\/Caution\/Critical for ISO 4\]/g, `<span style="color: ${iso4Status.color};">${iso4Status.text}</span>`);
-    html = html.replace(/\[Good\/Caution\/Critical for ISO 6\]/g, `<span style="color: ${iso6Status.color};">${iso6Status.text}</span>`);
-    html = html.replace(/\[Good\/Caution\/Critical for ISO 14\]/g, `<span style="color: ${iso14Status.color};">${iso14Status.text}</span>`);
-   // Replace the current year placeholder
-    html = html.replace(/\$\{current_year\}/g, new Date().getFullYear());
-    // Replace ISO value placeholders in the Analysis and Findings section
-    html = html.replace(/\$\{iso4_value\}/g, iso4Avg);
-    html = html.replace(/\$\{iso6_value\}/g, iso6Avg);
-    html = html.replace(/\$\{iso14_value\}/g, iso14Avg);
-    html = html.replace('[Specific actions based on ISO 4 value]', iso4Recommendation);
-    html = html.replace('[Specific actions based on ISO 6 value]', iso6Recommendation);
-    html = html.replace('[Specific actions based on ISO 14 value]', iso14Recommendation);
+    <footer class="footer">
+      <div class="footer-content">
+        Fuelfix - <span id="current-year"></span><br>
+        5 Excellence Drive Wangarra WA 6065<br>
+        Phone: 1300 734 764
+      </div>
+    </footer>
+  </div>
 
-    // Generate PDF
-    const base64 = Buffer.from(html).toString("base64");
-    const options = {
-      displayHeaderFooter: false,
-      margin: {
-        top: "0.25cm",
-        right: "0.25cm",
-        left: "0.25cm",
-        bottom: "0.25cm",
+  <!-- Script for generating the chart -->
+  <script>
+    var chartLabels = JSON.parse('${chart_labels}');
+    var chartSeries = JSON.parse('${chart_series}');
+    
+    console.log(chartSeries);
+    console.log(chartLabels);
+    
+    new Chartist.Line('#iso-chart', {
+      labels: chartLabels,
+      series: chartSeries
+    }, {
+      fullWidth: true,
+      showArea: true,
+      chartPadding: {
+        right: 10,
+        left: 10
       },
-    };
-
-    const result = await axios.post("https://pdf.middleware.tago.io", { base64, options }, { headers: { token: context.token } });
-    const pdf = result.data.result;
-
-    // Send the email
-    const email = new Services({ token: context.token }).email;
-    const email_settings = {
-      to: env_vars.email,
-      subject: "Your Custom Report",
-      message: "Here is your custom report.",
-      attachment: {
-        archive: pdf,
-        type: "base64",
-        filename: "custom-report.pdf",
+      axisX: {
+        showGrid: true,
+        labelInterpolationFnc: function(value, index) {
+          return value;
+        }
       },
-    };
-
-    await email.send(email_settings);
-    console.log("Email sent with success.");
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-// Helper function to generate table HTML
-function generateTableHTML(tableData) {
-  let tableHTML = '<table><thead><tr><th>Variable</th>';
-  for (let i = 1; i <= 8; i++) {
-    tableHTML += `<th>Reading ${i}</th>`;
-  }
-  tableHTML += '</tr></thead><tbody>';
-  tableData.forEach(row => {
-    tableHTML += `<tr><td>${row.variable}</td>`;
-    row.values.forEach(value => {
-      tableHTML += `<td>${value}</td>`;
+      axisY: {
+        showGrid: true,
+        onlyInteger: true,
+        offset: 20
+      },
+      lineSmooth: Chartist.Interpolation.simple({
+        divisor: 2
+      }),
+      low: 0
     });
-    tableHTML += '</tr>';
-  });
-  tableHTML += '</tbody></table>';
-  return tableHTML;
-}
-
-module.exports = new Analysis(myAnalysis);
+  </script>
+    <script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
