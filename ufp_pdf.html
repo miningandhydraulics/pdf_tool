@@ -10,7 +10,8 @@
     }
     .ct-chart {
       padding-bottom: 20px; /* Add padding below the chart */
-      height: 300px; /* Adjust the height of the chart as needed */
+      height: auto; /* Allow chart to auto scale its height */
+      width: 100%; /* Ensure chart uses full width of container */
     }
     .iso-box {
       padding: 10px;
@@ -19,14 +20,14 @@
       border-radius: 5px;
     }
     .centered-title {
-  text-align: center;
-}
-.root-cause-title {
-  margin-top: 20px; /* Adjust the value as needed for spacing */
-}
-.report-date {
-  text-align: center;
-}
+      text-align: center;
+    }
+    .root-cause-title {
+      margin-top: 20px; /* Adjust the value as needed for spacing */
+    }
+    .report-date {
+      text-align: center;
+    }
     .chart-legend {
       text-align: center;
       margin-top: 10px;
@@ -36,8 +37,8 @@
       margin-right: 10px;
     }
     .chart-container {
-  page-break-inside: avoid; /* Avoid page break inside this container */
-}
+      page-break-inside: avoid; /* Avoid page break inside this container */
+    }
     .chart-legend .legend-item i {
       display: inline-block;
       width: 12px;
@@ -46,12 +47,11 @@
       border-radius: 50%;
     }
     .centered-title {
-  text-align: center;
-}
-
-.report-date {
-  text-align: center; /* Center align if you want the date centered as well */
-}
+      text-align: center;
+    }
+    .report-date {
+      text-align: center; /* Center align if you want the date centered as well */
+    }
     /* Styles for table pagination */
     table {
       width: 100%;
@@ -75,13 +75,11 @@
       display: inline-block;
       text-align: center;
     }
-
     /* Page Break Style */
     .page-break {
       display: block;
       page-break-before: always;
     }
-
     /* Adjusted styles for ISO threshold boxes */
     .iso-threshold-box {
       padding: 5px; /* Reduced padding */
@@ -90,18 +88,15 @@
       display: flex;
       align-items: center; /* Align items vertically */
     }
-
     .iso-threshold-box > div {
       flex: 0 0 auto; /* Adjust flex settings */
       margin-right: 10px; /* Add some space between text and color indicators */
     }
-
     .iso-threshold-box span {
       display: flex;
       align-items: center;
       margin-right: 10px; /* Space between each indicator */
     }
-
     .iso-threshold-box span span {
       display: inline-block;
       width: 10px;
@@ -115,13 +110,13 @@
 <body>
   <div class="container">
     <div class="header">
-  <img src="https://github.com/miningandhydraulics/pdf_tool/blob/main/ufp-logo.png?raw=true" alt="Logo" style="height: 50px;">
-  <h1 class="centered-title">United Fluid Power - Filtration Report</h1>
-  <p class="report-date">Report Date: ${full_date}</p>
-</div>
+      <img src="https://github.com/miningandhydraulics/pdf_tool/blob/main/ufp-logo.png?raw=true" alt="Logo" style="height: 50px;">
+      <h1 class="centered-title">United Fluid Power - Filtration Report</h1>
+      <p class="report-date">Report Date: ${full_date}</p>
+    </div>
 
     <!-- ISO Readings Title -->
-<h2>ISO Readings</h2>
+    <h2>ISO Readings</h2>
     
     <!-- ISO Boxes -->
     <div class="iso-box" style="background-color: ${iso4_color};">ISO4 Average: ${iso4_avg}</div>
@@ -174,7 +169,8 @@
 
     <!-- Page Break -->
     <div class="page-break"></div>
-<!-- Brief Report Section -->
+
+    <!-- Brief Report Section -->
     <div class="report-section">
       <h2>Report Overview</h2>
       <p>This report provides an analysis of the diesel dispense quality as measured by ISO cleanliness standards. The data reflects the particle count in the diesel, categorized by size, and is crucial for assessing the quality and purity of the fuel.</p>
@@ -187,12 +183,12 @@
       </ul>
 
       <h3>Analysis and Findings:</h3>
-<p>The ISO cleanliness levels for the diesel dispensed are as follows:</p>
-<ul>
-  <li>ISO 4: The current level is ${iso4_avg}, which falls within the [Good/Caution/Critical for ISO 4] category.</li>
-  <li>ISO 6: The current level is ${iso6_avg}, which falls within the [Good/Caution/Critical for ISO 6] category.</li>
-  <li>ISO 14: The current level is ${iso14_avg}, which falls within the [Good/Caution/Critical for ISO 14] category.</li>
-</ul>
+      <p>The ISO cleanliness levels for the diesel dispensed are as follows:</p>
+      <ul>
+        <li>ISO 4: The current level is ${iso4_avg}, which falls within the [Good/Caution/Critical for ISO 4] category.</li>
+        <li>ISO 6: The current level is ${iso6_avg}, which falls within the [Good/Caution/Critical for ISO 6] category.</li>
+        <li>ISO 14: The current level is ${iso14_avg}, which falls within the [Good/Caution/Critical for ISO 14] category.</li>
+      </ul>
       <h3>Recommendations:</h3>
       <p>Based on the ISO cleanliness levels, we recommend the following actions:</p>
       <ul>
@@ -205,20 +201,21 @@
       <p>Maintaining optimal fuel cleanliness is crucial for the efficient operation of diesel-powered machinery. Regular monitoring and adherence to ISO cleanliness standards ensure the longevity and reliability of the equipment. This report underscores the importance of ongoing quality checks and the need for appropriate measures to maintain or improve fuel purity.</p>
     </div>
     
-<!-- Page Break -->
+    <!-- Page Break -->
     
     <!-- Line Chart Section -->
-<div class="chart-container">
-  <h2>Raw ISO Chart</h2>
-  <section class="line-chart" id="iso-chart"></section>
-  <div class="chart-legend">
-    <span class="legend-item"><i style="background: #FFA500;"></i> ISO4 (Orange)</span>
-    <span class="legend-item"><i style="background: #0000FF;"></i> ISO6 (Blue)</span>
-    <span class="legend-item"><i style="background: #800080;"></i> ISO14 (Purple)</span>
-  </div>
-  
-<!-- Root Cause Analysis Title -->
-<h2 class="root-cause-title">Root Cause Analysis</h2>
+    <div class="chart-container chart-section">
+      <h2>Raw ISO Chart</h2>
+      <section class="ct-chart line-chart" id="iso-chart"></section>
+      <div class="chart-legend">
+        <span class="legend-item"><i style="background: #FFA500;"></i> ISO4 (Orange)</span>
+        <span class="legend-item"><i style="background: #0000FF;"></i> ISO6 (Blue)</span>
+        <span class="legend-item"><i style="background: #800080;"></i> ISO14 (Purple)</span>
+      </div>
+    </div>
+
+    <!-- Root Cause Analysis Title -->
+    <h2 class="root-cause-title">Root Cause Analysis</h2>
 
     <!-- Table Section -->
     <table>
@@ -276,11 +273,13 @@
       lineSmooth: Chartist.Interpolation.simple({
         divisor: 2
       }),
-      low: 0
+      low: 0,
+      height: 'auto',
+      width: '100%'
     });
   </script>
-    <script>
-  document.getElementById('current-year').textContent = new Date().getFullYear();
-</script>
+  <script>
+    document.getElementById('current-year').textContent = new Date().getFullYear();
+  </script>
 </body>
 </html>
