@@ -116,130 +116,134 @@
     </div>
 
     <!-- ISO Readings Title -->
-    <h2>ISO Readings</h2>
-    
-    <!-- ISO Boxes -->
-    <div class="iso-box" style="background-color: ${iso4_color};">ISO4 Average: ${iso4_avg}</div>
-    <div class="iso-box" style="background-color: ${iso6_color};">ISO6 Average: ${iso6_avg}</div>
-    <div class="iso-box" style="background-color: ${iso14_color};">ISO14 Average: ${iso14_avg}</div>
+<h2>ISO Readings</h2>
 
-    <!-- New ISO Threshold Boxes -->
-    <div class="iso-threshold-box">
-        <div style="font-weight: bold; margin-bottom: 10px;">ISO 4 (≥ 4 µm):</div>
-        <div style="margin-bottom: 5px; display: flex; justify-content: space-between;">
-            <span>
-                <span style="background-color: green;"></span>Green (Good): 16 or lower
-            </span>
-            <span>
-                <span style="background-color: orange;"></span>Orange (Caution): 17-20
-            </span>
-            <span>
-                <span style="background-color: red;"></span>Red (Critical): 21 or higher
-            </span>
-        </div>
+<!-- ISO Boxes -->
+<div class="iso-box" style="background-color: ${iso4_color};">ISO4 Average: ${iso4_avg}</div>
+<div class="iso-box" style="background-color: ${iso6_color};">ISO6 Average: ${iso6_avg}</div>
+<div class="iso-box" style="background-color: ${iso14_color};">ISO14 Average: ${iso14_avg}</div>
+
+<!-- New ISO Threshold Boxes -->
+<div class="iso-threshold-box">
+    <div style="font-weight: bold; margin-bottom: 10px;">ISO 4 (≥ 4 µm):</div>
+    <div style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+        <span>
+            <span style="background-color: green;"></span>Green (Good): 10 or lower
+        </span>
+        <span>
+            <span style="background-color: orange;"></span>Orange (Caution): 11-20
+        </span>
+        <span>
+            <span style="background-color: red;"></span>Red (Critical): 21 or higher
+        </span>
     </div>
-    <div class="iso-threshold-box">
-        <div style="font-weight: bold; margin-bottom: 10px;">ISO 6 (≥ 6 µm):</div>
-        <div style="margin-bottom: 5px; display: flex; justify-content: space-between;">
-            <span>
-                <span style="background-color: green;"></span>Green (Good): 13 or lower
-            </span>
-            <span>
-                <span style="background-color: orange;"></span>Orange (Caution): 14-16
-            </span>
-            <span>
-                <span style="background-color: red;"></span>Red (Critical): 17 or higher
-            </span>
-        </div>
+</div>
+<div class="iso-threshold-box">
+    <div style="font-weight: bold; margin-bottom: 10px;">ISO 6 (≥ 6 µm):</div>
+    <div style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+        <span>
+            <span style="background-color: green;"></span>Green (Good): 15 or lower
+        </span>
+        <span>
+            <span style="background-color: orange;"></span>Orange (Caution): 16-25
+        </span>
+        <span>
+            <span style="background-color: red;"></span>Red (Critical): 26 or higher
+        </span>
     </div>
-    <div class="iso-threshold-box">
-        <div style="font-weight: bold; margin-bottom: 10px;">ISO 14 (≥ 14 µm):</div>
-        <div style="margin-bottom: 5px; display: flex; justify-content: space-between;">
-            <span>
-                <span style="background-color: green;"></span>Green (Good): 10 or lower
-            </span>
-            <span>
-                <span style="background-color: orange;"></span>Orange (Caution): 11-12
-            </span>
-            <span>
-                <span style="background-color: red;"></span>Red (Critical): 13 or higher
-            </span>
-        </div>
+</div>
+<div class="iso-threshold-box">
+    <div style="font-weight: bold; margin-bottom: 10px;">ISO 14 (≥ 14 µm):</div>
+    <div style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+        <span>
+            <span style="background-color: green;"></span>Green (Good): 20 or lower
+        </span>
+        <span>
+            <span style="background-color: orange;"></span>Orange (Caution): 21-30
+        </span>
+        <span>
+            <span style="background-color: red;"></span>Red (Critical): 31 or higher
+        </span>
     </div>
+</div>
 
-    <!-- Page Break -->
-    <div class="page-break"></div>
+<!-- Page Break -->
+<div class="page-break"></div>
 
-    <!-- Brief Report Section -->
-    <div class="report-section">
-      <h2>Report Overview</h2>
-      <p>This report provides an analysis of the diesel dispense quality as measured by ISO cleanliness standards. The data reflects the particle count in the diesel, categorized by size, and is crucial for assessing the quality and purity of the fuel.</p>
+<!-- Brief Report Section -->
+<div class="report-section">
+  <h2>Report Overview</h2>
+  <p>This report provides an analysis of the diesel dispense quality as measured by ISO cleanliness standards. The data reflects the particle count in the diesel, categorized by size, and is crucial for assessing the quality and purity of the fuel.</p>
 
-      <h3>ISO Cleanliness Levels:</h3>
-      <ul>
-        <li>ISO 4 (≥ 4 µm): ${iso4_avg}</li>
-        <li>ISO 6 (≥ 6 µm): ${iso6_avg}</li>
-        <li>ISO 14 (≥ 14 µm): ${iso14_avg}</li>
-      </ul>
+  <h3>ISO Cleanliness Levels:</h3>
+  <ul>
+    <li>ISO 4 (≥ 4 µm): ${iso4_avg}</li>
+    <li>ISO 6 (≥ 6 µm): ${iso6_avg}</li>
+    <li>ISO 14 (≥ 14 µm): ${iso14_avg}</li>
+  </ul>
 
-      <h3>Analysis and Findings:</h3>
-      <p>The ISO cleanliness levels for the diesel dispensed are as follows:</p>
-      <ul>
-        <li>ISO 4: The current level is ${iso4_avg}, which falls within the [Good/Caution/Critical for ISO 4] category.</li>
-        <li>ISO 6: The current level is ${iso6_avg}, which falls within the [Good/Caution/Critical for ISO 6] category.</li>
-        <li>ISO 14: The current level is ${iso14_avg}, which falls within the [Good/Caution/Critical for ISO 14] category.</li>
-      </ul>
-      <h3>Recommendations:</h3>
-      <p>Based on the ISO cleanliness levels, we recommend the following actions:</p>
-      <ul>
-        <li>[Specific actions based on ISO 4 value]</li>
-        <li>[Specific actions based on ISO 6 value]</li>
-        <li>[Specific actions based on ISO 14 value]</li>
-      </ul>
+  <h3>Analysis and Findings:</h3>
+  <p>The ISO cleanliness levels for the diesel dispensed are as follows:</p>
+  <ul>
+    <li>ISO 4: The current level is ${iso4_avg}, which falls within the [Good/Caution/Critical for ISO 4] category.</li>
+    <li>ISO 6: The current level is ${iso6_avg}, which falls within the [Good/Caution/Critical for ISO 6] category.</li>
+    <li>ISO 14: The current level is ${iso14_avg}, which falls within the [Good/Caution/Critical for ISO 14] category.</li>
+  </ul>
+  <h3>Recommendations:</h3>
+  <p>Based on the ISO cleanliness levels, we recommend the following actions:</p>
+  <ul>
+    <li>[Specific actions based on ISO 4 value]</li>
+    <li>[Specific actions based on ISO 6 value]</li>
+    <li>[Specific actions based on ISO 14 value]</li>
+  </ul>
 
-      <h3>Conclusion:</h3>
-      <p>Maintaining optimal fuel cleanliness is crucial for the efficient operation of diesel-powered machinery. Regular monitoring and adherence to ISO cleanliness standards ensure the longevity and reliability of the equipment. This report underscores the importance of ongoing quality checks and the need for appropriate measures to maintain or improve fuel purity.</p>
-    </div>
-    
-    <!-- Page Break -->
-    
-    <!-- Line Chart Section -->
-    <div class="chart-container chart-section">
-      <h2>Raw ISO Chart</h2>
-      <section class="ct-chart line-chart" id="iso-chart"></section>
-      <div class="chart-legend">
-        <span class="legend-item"><i style="background: #FFA500;"></i> ISO4 (Orange)</span>
-        <span class="legend-item"><i style="background: #0000FF;"></i> ISO6 (Blue)</span>
-        <span class="legend-item"><i style="background: #800080;"></i> ISO14 (Purple)</span>
-      </div>
-    </div>
+  <h3>Conclusion:</h3>
+  <p>Maintaining optimal fuel cleanliness is crucial for the efficient operation of diesel-powered machinery. Regular monitoring and adherence to ISO cleanliness standards ensure the longevity and reliability of the equipment. This report underscores the importance of ongoing quality checks and the need for appropriate measures to maintain or improve fuel purity.</p>
+</div>
 
-    <!-- Root Cause Analysis Title -->
-    <h2 class="root-cause-title">Root Cause Analysis</h2>
+<!-- Page Break -->
+<div class="page-break"></div>
 
-    <!-- Table Section -->
-    <table>
-      <thead>
-        <tr>
-          <th>Variable</th>
-          <th>Reading</th>
-          <th>Value</th>
-          <th>Timestamp</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${table_content}
-      </tbody>
-    </table>
-
-    <footer class="footer">
-      <div class="footer-content">
-        United Fluid Power - <span id="current-year"></span><br>
-        17 Cutting Way Yangebup WA 6164<br>
-        Phone: 9418 8522
-      </div>
-    </footer>
+<!-- Line Chart Section -->
+<div class="chart-container chart-section">
+  <h2>Raw ISO Chart</h2>
+  <section class="ct-chart line-chart" id="iso-chart"></section>
+  <div class="chart-legend">
+    <span class="legend-item"><i style="background: #FFA500;"></i> ISO4 (Orange)</span>
+    <span class="legend-item"><i style="background: #0000FF;"></i> ISO6 (Blue)</span>
+    <span class="legend-item"><i style="background: #800080;"></i> ISO14 (Purple)</span>
   </div>
+</div>
+
+<!-- Page Break -->
+<div class="page-break"></div>
+
+<!-- Root Cause Analysis Title -->
+<h2 class="root-cause-title">Hourly Averages</h2>
+
+<!-- Table Section -->
+<table>
+  <thead>
+    <tr>
+      <th>Hour</th>
+      <th>ISO 4</th>
+      <th>ISO 6</th>
+      <th>ISO 14</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${table_content}
+  </tbody>
+</table>
+
+<footer class="footer">
+  <div class="footer-content">
+    United Fluid Power - <span id="current-year"></span><br>
+    17 Cutting Way Yangebup WA 6164<br>
+    Phone: 9418 8522
+  </div>
+  
+</footer>
 
   <!-- Script for generating the chart -->
   <script>
