@@ -1,526 +1,365 @@
-// Function to clean value (handle "null" strings)
-function cleanValue(value) {
-  if (value === "null" || value === null || value === undefined) return null;
-  return isNaN(value) ? value : Number(value);
-}const { Analysis, Device, Services, Utils } = require("@tago-io/sdk");
-const axios = require("axios");
-const moment = require("moment-timezone");
-
-// Function to clean and format ISO code
-function formatIsoCode(isoCode) {
-  if (!isoCode || isoCode === 'N/A' || isoCode === null || isoCode === undefined || 
-      isoCode.includes('NaN') || isoCode === 'null') {
-    return '00/00/00';
-  }
-  return isoCode;
-}
-
-// Function to determine status based on thresholds
-function getStatus(value, thresholds) {
-  if (value === null || value === undefined) return 'Unknown';
-  if (value <= thresholds.good) return 'Good';
-  if (value <= thresholds.caution) return 'Caution';
-  return 'Critical';
-}
-
-// Function to get status color
-function getStatusColor(status) {
-  switch(status?.toLowerCase()) {
-    case 'good': case 'excellent': return '#28a745';
-    case 'caution': case 'fair': case 'moderate': return '#ffc107';
-    case 'critical': case 'poor': case 'high': case 'degraded': return '#dc3545';
-    default: return '#6c757d';
-  }
-}
-
-// Function to generate recommendations based on oil health analysis
-function getOilHealthRecommendations(overallHealth, isoStatus, primaryWear, wearSeverity, temperatureStatus) {
-  let recommendations = [];
-  
-  // Overall health recommendations
-  switch(overallHealth?.toLowerCase()) {
-    case 'critical':
-      recommendations.push("IMMEDIATE ACTION REQUIRED: Stop equipment operation and conduct emergency maintenance.");
-      break;
-    case 'poor':
-      recommendations.push("Schedule urgent maintenance within 24-48 hours.");
-      break;
-    case 'fair':
-      recommendations.push("Plan maintenance within the next week.");
-      break;
-    case 'good':
-      recommendations.push("Continue normal operation with regular monitoring.");
-      break;
-    default:
-      recommendations.push("Monitor oil condition regularly.");
-  }
-  
-  // ISO cleanliness recommendations
-  switch(isoStatus?.toLowerCase()) {
-    case 'critical':
-      recommendations.push("Replace filtration system immediately - contamination levels exceed safe limits.");
-      break;
-    case 'caution':
-      recommendations.push("Upgrade filtration system to remove finer particles.");
-      break;
-    case 'good':
-      recommendations.push("Maintain current filtration system effectiveness.");
-      break;
-  }
-  
-  // Wear particle recommendations
-  if (primaryWear && wearSeverity) {
-    switch(wearSeverity.toLowerCase()) {
-      case 'high':
-        recommendations.push(`High ${primaryWear} wear detected - inspect related components immediately.`);
-        break;
-      case 'moderate':
-        recommendations.push(`Moderate ${primaryWear} wear - schedule inspection of related components.`);
-        break;
-      case 'low':
-        recommendations.push(`Low ${primaryWear} wear - normal component condition.`);
-        break;
-    }
-  }
-  
-  // Temperature recommendations
-  switch(temperatureStatus?.toLowerCase()) {
-    case 'critical':
-      recommendations.push("CRITICAL: Equipment overheating detected - stop operation immediately.");
-      break;
-    case 'caution':
-      recommendations.push("Monitor temperature closely - check cooling system.");
-      break;
-  }
-  
-  return recommendations.length > 0 ? recommendations.join(' ') : "Continue regular monitoring and maintenance schedule.";
-}
-
-// Helper function to generate table HTML
-function generateOilAnalysisTableHTML(tableData) {
-  let tableHTML = ``;
-  
-  const currentDate = moment().tz("Australia/Perth");
-
-  for (let i = 23; i >= 0; i--) {
-    const hour = currentDate.clone().subtract(i, 'hours').startOf('hour').format('YYYY-MM-DD HH:00:00');
-    const hourData = tableData.find(data => data.hour === hour);
-    const formatTime = currentDate.clone().subtract(i, 'hours').format('HH:mm');
-
-    tableHTML += `
-      <tr>
-        <td>${formatTime}</td>
-        <td>${hourData ? hourData.iso4 || '-' : '-'}</td>
-        <td>${hourData ? hourData.iso6 || '-' : '-'}</td>
-        <td>${hourData ? hourData.iso14 || '-' : '-'}</td>
-        <td>${hourData ? hourData.overallHealth || '-' : '-'}</td>
-        <td>${hourData ? hourData.temperature || '-' : '-'}</td>
-        <td>${hourData ? hourData.primaryWear || '-' : '-'}</td>
-        <td>${hourData ? hourData.healthPriority || '-' : '-'}</td>
-      </tr>`;
-  }
-  
-  return tableHTML;
-}
-
-// Helper function to calculate average
-function calculateAverage(values) {
-  const filteredValues = values.filter(value => value !== null && !isNaN(value));
-  const sum = filteredValues.reduce((acc, val) => acc + val, 0);
-  return filteredValues.length ? Math.round(sum / filteredValues.length) : 0;
-}
-
-// Helper function to find most frequent value
-function getMostFrequent(values) {
-  const filteredValues = values.filter(value => value !== null && value !== undefined);
-  if (filteredValues.length === 0) return null;
-  
-  const frequency = {};
-  filteredValues.forEach(value => {
-    frequency[value] = (frequency[value] || 0) + 1;
-  });
-  
-  return Object.keys(frequency).reduce((a, b) => frequency[a] > frequency[b] ? a : b);
-}
-
-async function myDailyOilAnalysis(context) {
-  try {
-    const env_vars = Utils.envToJson(context.environment);
-
-    if (!env_vars.email) {
-      context.log("Email environment variable not found");
-      return;
-    }
-    if (!env_vars.device_token) {
-      context.log("Device_token environment variable not found");
-      return;
-    }
-
-    const device = new Device({ token: env_vars.device_token });
-    
-    // Use EXACT variables from your debug output
-    const variables = [
-      "fatigue_count", "sliding_count", "cutting_count", "calibration_status", 
-      "humidity_status", "temperature_status", "confidence_level", "sample_quality", 
-      "total_wear_particles", "wear_distribution", "primary_wear_mode", 
-      "iso_code_current", "iso_status", "health_priority", "machine_health", 
-      "wear_severity", "overall_oil_health", "iso4", "iso6", "iso14", 
-      "total_particles", "total_bubbles", "cutting_particles", "sliding_particles", 
-      "fatigue_particles", "fibre_particles", "air_bubbles", "unknown_particles", 
-      "particles_4um", "particles_6um", "particles_14um", "particles_21um", 
-      "particles_38um", "particles_70um", "temperature", "relative_humidity", 
-      "ppm", "oil_degradation", "device_status", "device_type"
-    ];
-
-    context.log(`Fetching oil analysis data - searching for raw sensor data`);
-
-    // Get much more data to find raw sensor readings (they may be infrequent)
-    const data = await device.getData({
-      qty: 2000 // Get many more records to find raw sensor data
-    });
-
-    context.log(`Raw data length: ${data.length}`);
-
-    if (!data.length) {
-      context.log("No data retrieved.");
-      return;
-    }
-
-    // Filter to last 72 hours to get raw sensor data
-    const today_date = moment().tz("Australia/Perth");
-    const todayStart = today_date.clone().startOf('day');
-    const cutoffTime = moment().subtract(72, 'hours');
-    
-    const recentData = data.filter(item => {
-      return moment(item.time).isAfter(cutoffTime);
-    });
-
-    context.log(`Last 72 hours data length: ${recentData.length}`);
-
-    // Further filter to today's data for the report
-    const todaysData = recentData.filter(item => {
-      const itemTime = moment(item.time).tz("Australia/Perth");
-      return itemTime.isSameOrAfter(todayStart);
-    });
-
-    context.log(`Today's data length: ${todaysData.length}`);
-
-    // Clean the data and filter out null values
-    const cleanedData = recentData.map(item => ({
-      ...item,
-      value: cleanValue(item.value)
-    })).filter(item => item.value !== null);
-
-    context.log(`Cleaned 30-hour data length: ${cleanedData.length}`);
-    
-    // Debug: Show what variables we actually have
-    const availableVars = [...new Set(cleanedData.map(item => item.variable))];
-    context.log(`Available variables: ${availableVars.join(', ')}`);
-    
-    // Debug: Show raw sensor data availability
-    const rawSensorVariables = ['iso4', 'iso6', 'iso14', 'temperature', 'total_particles', 'cutting_particles'];
-    const foundRawVars = availableVars.filter(v => rawSensorVariables.includes(v));
-    context.log(`Raw sensor variables found: ${foundRawVars.join(', ')}`);
-    
-    // Debug: Show some frequency count values to understand what they contain
-    const freqCountSamples = cleanedData.filter(item => 
-      ['iso4_frequency_count_hourly', 'iso6_frequency_count_hourly', 'iso14_frequency_count_hourly'].includes(item.variable)
-    ).slice(0, 3);
-    
-    if (freqCountSamples.length > 0) {
-      context.log(`Sample frequency count values:`, freqCountSamples.map(item => 
-        `${item.variable}: ${item.value}`
-      ).join(', '));
-    }
-    
-    // Check if we can find ANY raw sensor data in the full dataset (including nulls)
-    const allRawSensorVars = ['iso4', 'iso6', 'iso14', 'temperature', 'total_particles', 'cutting_particles', 'sliding_particles', 'fatigue_particles'];
-    const allRawData = data.filter(item => allRawSensorVars.includes(item.variable));
-    context.log(`Raw sensor data in full dataset: ${allRawData.length} records`);
-    
-    if (allRawData.length > 0) {
-      // Find most recent non-null raw reading
-      const nonNullRaw = allRawData.filter(item => item.value !== "null" && item.value !== null).slice(0, 5);
-      context.log(`Recent non-null raw data: ${nonNullRaw.length} records`);
-      if (nonNullRaw.length > 0) {
-        context.log(`Sample raw data:`, nonNullRaw.map(item => 
-          `${item.variable}: ${item.value} (${item.time})`
-        ).join(', '));
-      }
-      
-      // Show latest raw data timestamp
-      const latestRawTime = allRawData.reduce((latest, item) => {
-        return moment(item.time).isAfter(moment(latest)) ? item.time : latest;
-      }, allRawData[0].time);
-      context.log(`Latest raw sensor timestamp: ${latestRawTime}`);
-    } else {
-      context.log("No raw sensor data found in dataset - may be in different device or using different variable names");
-    }
-
-    // Filter cleaned data to today for daily summary (but use 30-hour data for context)
-    const todaysCleanData = cleanedData.filter(item => {
-      const itemTime = moment(item.time).tz("Australia/Perth");
-      return itemTime.isSameOrAfter(todayStart);
-    });
-
-    context.log(`Today's cleaned data length: ${todaysCleanData.length}`);
-
-    // Group data by hour and variable (use all 30-hour data for more context)
-    const hourlyData = {};
-    
-    cleanedData.forEach(item => {
-      const hour = moment(item.time).startOf('hour').format('YYYY-MM-DD HH:00:00');
-      const variable = item.variable;
-
-      if (!hourlyData[hour]) {
-        hourlyData[hour] = {};
-      }
-      if (!hourlyData[hour][variable]) {
-        hourlyData[hour][variable] = [];
-      }
-      hourlyData[hour][variable].push(item.value);
-    });
-
-    context.log(`Hourly data periods: ${Object.keys(hourlyData).length}`);
-
-    // Calculate hourly summaries
-    const hourlySummaries = [];
-    const currentDate = moment().tz("Australia/Perth");
-
-    for (let i = 23; i >= 0; i--) {
-      const hour = currentDate.clone().subtract(i, 'hours').startOf('hour').format('YYYY-MM-DD HH:00:00');
-      const hourData = hourlyData[hour] || {};
-
-      hourlySummaries.push({
-        hour,
-        // Use hourly frequency count data
-        iso4: hourData.iso4_frequency_count_hourly ? calculateAverage(hourData.iso4_frequency_count_hourly) : null,
-        iso6: hourData.iso6_frequency_count_hourly ? calculateAverage(hourData.iso6_frequency_count_hourly) : null,
-        iso14: hourData.iso14_frequency_count_hourly ? calculateAverage(hourData.iso14_frequency_count_hourly) : null,
-        overallHealth: hourData.overall_oil_health ? getMostFrequent(hourData.overall_oil_health) : null,
-        temperature: hourData.temperature_frequency_count_hourly ? calculateAverage(hourData.temperature_frequency_count_hourly) : null,
-        primaryWear: hourData.primary_wear_mode ? getMostFrequent(hourData.primary_wear_mode) : null,
-        healthPriority: hourData.health_priority ? calculateAverage(hourData.health_priority) : null,
-        totalParticles: hourData.total_particles_frequency_count_hourly ? calculateAverage(hourData.total_particles_frequency_count_hourly) : null
-      });
-    }
-
-    // Calculate daily summary using today's data but fallback to recent data if needed
-    const dailyDataSource = todaysCleanData.length > 10 ? todaysCleanData : cleanedData;
-    const allData = dailyDataSource.reduce((acc, item) => {
-      if (!acc[item.variable]) acc[item.variable] = [];
-      acc[item.variable].push(item.value);
-      return acc;
-    }, {});
-
-    // Get latest values for status indicators (use all recent data)
-    const latestData = cleanedData.reduce((acc, item) => {
-      if (!acc[item.variable] || moment(item.time).isAfter(moment(acc[item.variable].time))) {
-        acc[item.variable] = item;
-      }
-      return acc;
-    }, {});
-
-    // Calculate daily summary - now try both raw data and frequency counts
-    const dailySummary = {
-      // Try raw data first, then fallback to frequency counts
-      iso4: allData.iso4 ? calculateAverage(allData.iso4) : 
-            (allData.iso4_frequency_count_hourly ? calculateAverage(allData.iso4_frequency_count_hourly) : null),
-      iso6: allData.iso6 ? calculateAverage(allData.iso6) : 
-            (allData.iso6_frequency_count_hourly ? calculateAverage(allData.iso6_frequency_count_hourly) : null),
-      iso14: allData.iso14 ? calculateAverage(allData.iso14) : 
-             (allData.iso14_frequency_count_hourly ? calculateAverage(allData.iso14_frequency_count_hourly) : null),
-      
-      // Analysis results from device
-      overallHealth: latestData.overall_oil_health?.value || 'Unknown',
-      isoStatus: latestData.iso_status?.value || 'Unknown',
-      primaryWear: latestData.primary_wear_mode?.value || 'Unknown',
-      wearSeverity: latestData.wear_severity?.value || 'Unknown',
-      machineHealth: latestData.machine_health?.value || 'Unknown',
-      temperatureStatus: latestData.temperature_status?.value || 'Unknown',
-      healthPriority: allData.health_priority ? calculateAverage(allData.health_priority) : null,
-      
-      // Try raw temperature data first, then frequency counts
-      temperatureAvg: allData.temperature ? calculateAverage(allData.temperature) :
-                     (allData.temperature_frequency_count_hourly ? calculateAverage(allData.temperature_frequency_count_hourly) : null),
-      totalParticlesAvg: allData.total_particles ? calculateAverage(allData.total_particles) :
-                        (allData.total_particles_frequency_count_hourly ? calculateAverage(allData.total_particles_frequency_count_hourly) : null),
-      
-      isoCodeCurrent: formatIsoCode(latestData.iso_code_current?.value),
-      sampleQuality: latestData.sample_quality?.value || 'Good',
-      deviceType: latestData.device_type?.value || 'Oil Analysis Device',
-      confidenceLevel: latestData.confidence_level?.value || 'High',
-      calibrationStatus: latestData.calibration_status?.value || 'Current'
-    };
-
-    // Get status colors
-    const overallHealthColor = getStatusColor(dailySummary.overallHealth);
-    const isoStatusColor = getStatusColor(dailySummary.isoStatus);
-    const machineHealthColor = getStatusColor(dailySummary.machineHealth);
-    const temperatureStatusColor = getStatusColor(dailySummary.temperatureStatus);
-
-    // Generate recommendations
-    const recommendations = getOilHealthRecommendations(
-      dailySummary.overallHealth,
-      dailySummary.isoStatus,
-      dailySummary.primaryWear,
-      dailySummary.wearSeverity,
-      dailySummary.temperatureStatus
-    );
-
-    // Try to fetch the sensor image from public URL
-    let sensorImageBase64 = '';
-    try {
-      const imageUrl = 'https://api.tago.io/file/659cb21c0759220009981fcb/Image/Oilwear01/latest_image.jpeg';
-      
-      context.log(`Attempting to fetch sensor image from: ${imageUrl}`);
-      
-      // Fetch the image from the public URL
-      const imageResponse = await axios.get(imageUrl, { 
-        responseType: 'arraybuffer',
-        timeout: 10000 // 10 second timeout
-      });
-      
-      if (imageResponse.status === 200) {
-        sensorImageBase64 = Buffer.from(imageResponse.data).toString('base64');
-        context.log(`Successfully retrieved sensor image (${imageResponse.data.byteLength} bytes)`);
-      } else {
-        context.log(`Failed to fetch image: HTTP ${imageResponse.status}`);
-      }
-    } catch (imageError) {
-      context.log(`Error fetching sensor image: ${imageError.message}`);
-      if (imageError.response) {
-        context.log(`HTTP Status: ${imageError.response.status}`);
-      }
-    }
-
-    // Use the external HTML template
-    const pdf_template_url = "https://raw.githubusercontent.com/miningandhydraulics/pdf_tool/main/oil_analysis_pdf.html";
-    let html;
-    
-    try {
-      html = (await axios.get(pdf_template_url)).data;
-      context.log("Successfully fetched external HTML template");
-    } catch (error) {
-      context.log(`Could not fetch external template: ${error.message}`);
-      context.log("Using fallback embedded template");
-      // Keep the current embedded template as fallback
-      html = `<html>...</html>`; // Current embedded template
-    }
+<html>
 <head>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
   <style>
-    body { font-family: 'Fira Sans', sans-serif; margin: 0; padding: 20px; color: #333; }
-    .container { max-width: 210mm; margin: 0 auto; }
-    .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #2c5aa0; padding-bottom: 20px; }
-    .health-status-box { padding: 15px; margin: 10px 0; color: #fff; border-radius: 8px; text-align: center; font-weight: bold; font-size: 18px; }
-    .status-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin: 20px 0; }
-    .status-card { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; text-align: center; }
-    .status-card h3 { margin: 0 0 10px 0; color: #495057; font-size: 14px; }
-    .status-card .value { font-size: 16px; font-weight: bold; padding: 8px; border-radius: 4px; color: white; }
-    .centered-title { text-align: center; color: #2c5aa0; }
-    .report-date { text-align: center; font-size: 16px; margin: 10px 0; }
-    .device-info { text-align: center; background: #e9ecef; padding: 10px; border-radius: 5px; margin: 15px 0; }
-    .recommendations-section { background: #f8f9fa; border-left: 4px solid #007bff; padding: 20px; margin: 20px 0; border-radius: 4px; }
-    .recommendations-section h3 { color: #007bff; margin-top: 0; }
-    .section-title { color: #2c5aa0; border-bottom: 2px solid #2c5aa0; padding-bottom: 5px; margin: 25px 0 15px 0; }
-    .sensor-image { max-width: 100%; height: auto; border: 1px solid #dee2e6; border-radius: 5px; margin: 15px 0; }
-    .image-section { text-align: center; margin: 20px 0; }
-    .metrics-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin: 15px 0; }
-    .metric-box { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 10px; text-align: center; }
-    .metric-box .label { font-size: 12px; color: #6c757d; margin-bottom: 5px; }
-    .metric-box .value { font-size: 16px; font-weight: bold; }
-    .wear-analysis { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0; border-radius: 4px; }
-    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-    th, td { border: 1px solid #dee2e6; padding: 8px; text-align: center; font-size: 12px; }
-    th { background-color: #2c5aa0; color: white; font-weight: bold; }
-    tbody tr:nth-child(even) { background-color: #f8f9fa; }
-    .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6; color: #6c757d; }
+    body {
+      font-family: 'Fira Sans', sans-serif;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 210mm;
+      margin: 0 auto;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #2c5aa0;
+      padding-bottom: 20px;
+    }
+    .chart-section {
+      width: 100%;
+      max-width: 190mm;
+      margin-bottom: 20px;
+    }
+    .ct-chart {
+      padding-bottom: 20px;
+      height: auto;
+      width: 100%;
+    }
+    .health-status-box {
+      padding: 15px;
+      margin: 10px 0;
+      color: #fff;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .iso-box {
+      padding: 10px;
+      margin: 10px 0;
+      color: #fff;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .status-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .status-card {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+    }
+    .status-card h3 {
+      margin: 0 0 10px 0;
+      color: #495057;
+      font-size: 14px;
+    }
+    .status-card .value {
+      font-size: 18px;
+      font-weight: bold;
+      padding: 8px;
+      border-radius: 4px;
+      color: white;
+    }
+    .centered-title {
+      text-align: center;
+      color: #2c5aa0;
+    }
+    .report-date {
+      text-align: center;
+      font-size: 16px;
+      margin: 10px 0;
+    }
+    .device-info {
+      text-align: center;
+      background: #e9ecef;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 15px 0;
+    }
+    .chart-legend {
+      text-align: center;
+      margin-top: 10px;
+    }
+    .chart-legend .legend-item {
+      display: inline-block;
+      margin-right: 15px;
+    }
+    .chart-container {
+      page-break-inside: avoid;
+    }
+    .chart-legend .legend-item i {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin-right: 5px;
+      border-radius: 50%;
+    }
+    .recommendations-section {
+      background: #f8f9fa;
+      border-left: 4px solid #007bff;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+    .recommendations-section h3 {
+      color: #007bff;
+      margin-top: 0;
+    }
+    .wear-analysis {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      page-break-inside: auto;
+      margin: 20px 0;
+    }
+    tr { 
+      page-break-inside: avoid; 
+      page-break-after: auto;
+    }
+    thead { 
+      display: table-header-group;
+      background-color: #2c5aa0;
+      color: white;
+    }
+    tfoot { 
+      display: table-footer-group;
+    }
+    th, td {
+      border: 1px solid #dee2e6;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      font-weight: bold;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #dee2e6;
+      color: #6c757d;
+    }
+    .footer-content {
+      display: inline-block;
+      text-align: center;
+    }
+    .page-break {
+      display: block;
+      page-break-before: always;
+    }
+    .section-title {
+      color: #2c5aa0;
+      border-bottom: 2px solid #2c5aa0;
+      padding-bottom: 5px;
+      margin: 25px 0 15px 0;
+    }
+    .sensor-image {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      margin: 15px 0;
+    }
+    .image-section {
+      text-align: center;
+      margin: 20px 0;
+      page-break-inside: avoid;
+    }
+    .alert-critical {
+      background-color: #dc3545;
+      color: white;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 15px 0;
+      text-align: center;
+      font-weight: bold;
+    }
+    .alert-warning {
+      background-color: #ffc107;
+      color: #212529;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 15px 0;
+      text-align: center;
+      font-weight: bold;
+    }
+    .alert-success {
+      background-color: #28a745;
+      color: white;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 15px 0;
+      text-align: center;
+      font-weight: bold;
+    }
   </style>
+  <script src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
 </head>
 <body>
   <div class="container">
     <div class="header">
       <img src="https://github.com/miningandhydraulics/pdf_tool/blob/main/ufp-logo.png?raw=true" alt="Logo" style="height: 50px;">
       <h1 class="centered-title">United Fluid Power - Oil Analysis Report</h1>
-      <p class="report-date">Report Date: ${today_date.format("DD/MM/YYYY")}</p>
-      <div class="device-info"><strong>Device Type:</strong> ${dailySummary.deviceType}</div>
+      <p class="report-date">Report Date: ${full_date}</p>
+      <div class="device-info">
+        <strong>Device Serial:</strong> ${device_serial} | <strong>Location:</strong> ${device_location}
+      </div>
     </div>
 
-    <div class="health-status-box" style="background-color: ${overallHealthColor};">
-      OVERALL OIL HEALTH: ${dailySummary.overallHealth.toUpperCase()}
+    <!-- Overall Health Status -->
+    <div class="health-status-box" style="background-color: ${overall_health_color};">
+      OVERALL OIL HEALTH: ${overall_health_status}
     </div>
 
+    <!-- Status Grid -->
     <div class="status-grid">
       <div class="status-card">
         <h3>ISO Cleanliness</h3>
-        <div class="value" style="background-color: ${isoStatusColor};">
-          ${dailySummary.isoStatus}
+        <div class="value" style="background-color: ${iso_status_color};">
+          ${iso_status}
         </div>
-        <small>Code: ${formatIsoCode(dailySummary.isoCodeCurrent)}</small>
+        <small>Current: ${iso_code_current}</small>
+      </div>
+      <div class="status-card">
+        <h3>Oil Condition</h3>
+        <div class="value" style="background-color: ${oil_condition_color};">
+          ${oil_condition}
+        </div>
       </div>
       <div class="status-card">
         <h3>Machine Health</h3>
-        <div class="value" style="background-color: ${machineHealthColor};">
-          ${dailySummary.machineHealth}
+        <div class="value" style="background-color: ${machine_health_color};">
+          ${machine_health}
         </div>
-        <small>Priority: ${dailySummary.healthPriority}/10</small>
-      </div>
-      <div class="status-card">
-        <h3>Temperature</h3>
-        <div class="value" style="background-color: ${temperatureStatusColor};">
-          ${dailySummary.temperatureStatus}
-        </div>
-        <small>${dailySummary.temperatureAvg || 'N/A'}°C avg</small>
-      </div>
-      <div class="status-card">
-        <h3>Sample Quality</h3>
-        <div class="value" style="background-color: ${getStatusColor(dailySummary.sampleQuality)};">
-          ${dailySummary.sampleQuality}
-        </div>
-        <small>Analysis Confidence</small>
       </div>
     </div>
 
+    <!-- Wear Analysis Section -->
     <div class="wear-analysis">
       <h3 style="margin-top: 0; color: #856404;">Wear Particle Analysis</h3>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
         <div>
-          <strong>Primary Wear Mode:</strong> ${dailySummary.primaryWear}<br>
-          <strong>Wear Severity:</strong> ${dailySummary.wearSeverity}
+          <strong>Primary Wear Mode:</strong> ${primary_wear_mode}<br>
+          <strong>Wear Severity:</strong> ${wear_severity}
         </div>
         <div>
-          <strong>Calibration Status:</strong> ${dailySummary.calibrationStatus}<br>
-          <strong>Analysis Confidence:</strong> ${dailySummary.confidenceLevel}
+          <strong>Total Wear Particles:</strong> ${total_wear_particles}<br>
+          <strong>Health Priority:</strong> ${health_priority}/10
         </div>
       </div>
     </div>
 
+    <!-- ISO Readings -->
     <h2 class="section-title">ISO Cleanliness Readings</h2>
-    <div class="metrics-grid">
-      <div class="metric-box">
-        <div class="label">ISO 4 (≥4μm)</div>
-        <div class="value">${dailySummary.iso4 || 'N/A'}</div>
-      </div>
-      <div class="metric-box">
-        <div class="label">ISO 6 (≥6μm)</div>
-        <div class="value">${dailySummary.iso6 || 'N/A'}</div>
-      </div>
-      <div class="metric-box">
-        <div class="label">ISO 14 (≥14μm)</div>
-        <div class="value">${dailySummary.iso14 || 'N/A'}</div>
-      </div>
-      <div class="metric-box">
-        <div class="label">Current Code</div>
-        <div class="value">${formatIsoCode(dailySummary.isoCodeCurrent)}</div>
-      </div>
+    <div class="iso-box" style="background-color: ${iso4_color};">
+      <span>ISO 4 (≥4μm): ${iso4_avg}</span>
+      <span>${iso4_status}</span>
+    </div>
+    <div class="iso-box" style="background-color: ${iso6_color};">
+      <span>ISO 6 (≥6μm): ${iso6_avg}</span>
+      <span>${iso6_status}</span>
+    </div>
+    <div class="iso-box" style="background-color: ${iso14_color};">
+      <span>ISO 14 (≥14μm): ${iso14_avg}</span>
+      <span>${iso14_status}</span>
     </div>
 
+    <!-- Recommendations Section -->
     <div class="recommendations-section">
       <h3>Recommendations & Actions</h3>
       <p>${recommendations}</p>
     </div>
 
+    <!-- Latest Sensor Image Section -->
+    ${sensor_image_section}
+
+    <!-- Environmental Conditions -->
+    <h2 class="section-title">Environmental Conditions</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin: 15px 0;">
+      <div class="status-card">
+        <h3>Temperature</h3>
+        <div class="value" style="background-color: ${temperature_status_color}; color: white;">
+          ${temperature_avg}°C
+        </div>
+        <small>Status: ${temperature_status}</small>
+      </div>
+      <div class="status-card">
+        <h3>Humidity</h3>
+        <div class="value" style="background-color: #6c757d; color: white;">
+          ${humidity_avg}%
+        </div>
+      </div>
+      <div class="status-card">
+        <h3>Oil Degradation</h3>
+        <div class="value" style="background-color: #6c757d; color: white;">
+          ${oil_degradation_avg}%
+        </div>
+      </div>
+    </div>
+
+    <!-- Page Break -->
+    <div class="page-break"></div>
+
+    <!-- Line Chart Section -->
+    <div class="chart-container chart-section">
+      <h2 class="section-title">24-Hour Trend Analysis</h2>
+      <section class="ct-chart line-chart" id="oil-chart"></section>
+      <div class="chart-legend">
+        <span class="legend-item"><i style="background: #dc3545;"></i> Health Priority</span>
+        <span class="legend-item"><i style="background: #007bff;"></i> Temperature (°C)</span>
+        <span class="legend-item"><i style="background: #28a745;"></i> Total Particles (÷100)</span>
+      </div>
+    </div>
+
+    <!-- Page Break -->
+    <div class="page-break"></div>
+
+    <!-- Detailed Analysis Section -->
+    <div>
+      <h2 class="section-title">Detailed Analysis</h2>
+      
+      <h3>Oil Health Assessment:</h3>
+      <p>The current oil analysis indicates an overall health status of <strong>${overall_health_status}</strong>. 
+      This assessment is based on multiple factors including particle contamination, wear debris analysis, 
+      and oil condition evaluation.</p>
+
+      <h3>ISO Cleanliness Analysis:</h3>
+      <p>The ISO 4406 cleanliness code is currently <strong>${iso_code_current}</strong> with a status of <strong>${iso_status}</strong>. 
+      This represents the contamination level of particles ≥4μm, ≥6μm, and ≥14μm per milliliter of oil.</p>
+
+      <h3>Wear Pattern Analysis:</h3>
+      <p>The primary wear mode detected is <strong>${primary_wear_mode}</strong> with <strong>${wear_severity}</strong> severity. 
+      This indicates the type of mechanical wear occurring in the system and its current progression level.</p>
+
+      <h3>Sample Quality:</h3>
+      <p>Sample quality assessment: <strong>${sample_quality}</strong>. This ensures the reliability and accuracy of the analysis results.</p>
+    </div>
+
+    <!-- Page Break -->
+    <div class="page-break"></div>
+
+    <!-- Hourly Data Table -->
     <h2 class="section-title">Hourly Analysis Summary</h2>
     <table>
       <thead>
@@ -536,157 +375,84 @@ async function myDailyOilAnalysis(context) {
         </tr>
       </thead>
       <tbody>
-        ${generateOilAnalysisTableHTML(hourlySummaries)}
+        ${table_content}
       </tbody>
     </table>
 
-    <div class="footer">
-      United Fluid Power - Oil Analysis Division<br>
-      17 Cutting Way Yangebup WA 6164<br>
-      Phone: 9418 8522<br>
-              Report Generated: ${today_date.format("DD/MM/YYYY HH:mm")}
-    </div>
+    <footer class="footer">
+      <div class="footer-content">
+        United Fluid Power - Oil Analysis Division<br>
+        17 Cutting Way Yangebup WA 6164<br>
+        Phone: 9418 8522 | Email: info@unitedfluidpower.com.au<br>
+        Report Generated: ${current_year}
+      </div>
+    </footer>
   </div>
-</body>
-</html>`;
 
-    context.log("Generated HTML report with oil health analysis");
-
-    // Create the sensor image section
-    const sensorImageSection = sensorImageBase64 ? `
-    <h2 class="section-title">Latest Sensor Image</h2>
-    <div class="image-section">
-      <img src="data:image/jpeg;base64,${sensorImageBase64}" alt="Latest Oil Wear Analysis Image" class="sensor-image">
-      <p style="font-size: 12px; color: #6c757d; margin-top: 10px;">
-        Latest sensor image: Oilwear01 Analysis
-      </p>
-    </div>
-    ` : '';
-
-    // Replace placeholders in the HTML template
-    html = html.replace(/\$\{device_serial\}/g, dailySummary.deviceSerial || 'Unknown');
-    html = html.replace(/\$\{device_location\}/g, latestData.location?.value || 'Unknown Location');
-    html = html.replace(/\$\{full_date\}/g, today_date.format("DD/MM/YYYY"));
-    html = html.replace(/\$\{current_year\}/g, new Date().getFullYear());
+  <!-- Script for generating the chart -->
+  <script>
+    var chartLabels = JSON.parse('${chart_labels}');
+    var chartSeries = JSON.parse('${chart_series}');
     
-    // Health status replacements
-    html = html.replace(/\$\{overall_health_status\}/g, dailySummary.overallHealth);
-    html = html.replace(/\$\{overall_health_color\}/g, overallHealthColor);
-    html = html.replace(/\$\{iso_status\}/g, dailySummary.isoStatus);
-    html = html.replace(/\$\{iso_status_color\}/g, isoStatusColor);
-    html = html.replace(/\$\{oil_condition\}/g, dailySummary.oilCondition || 'Unknown');
-    html = html.replace(/\$\{oil_condition_color\}/g, getStatusColor(dailySummary.oilCondition || 'Unknown'));
-    html = html.replace(/\$\{machine_health\}/g, dailySummary.machineHealth);
-    html = html.replace(/\$\{machine_health_color\}/g, machineHealthColor);
+    console.log('Chart Data:', chartSeries);
+    console.log('Chart Labels:', chartLabels);
     
-    // ISO readings
-    html = html.replace(/\$\{iso_code_current\}/g, formatIsoCode(dailySummary.isoCodeCurrent));
-    html = html.replace(/\$\{iso4_avg\}/g, dailySummary.iso4 || 'N/A');
-    html = html.replace(/\$\{iso6_avg\}/g, dailySummary.iso6 || 'N/A');
-    html = html.replace(/\$\{iso14_avg\}/g, dailySummary.iso14 || 'N/A');
-    html = html.replace(/\$\{iso4_color\}/g, getStatusColor('good')); 
-    html = html.replace(/\$\{iso6_color\}/g, getStatusColor('good'));
-    html = html.replace(/\$\{iso14_color\}/g, getStatusColor('good'));
-    html = html.replace(/\$\{iso4_status\}/g, 'Good');
-    html = html.replace(/\$\{iso6_status\}/g, 'Good');
-    html = html.replace(/\$\{iso14_status\}/g, 'Good');
-    
-    // Wear analysis
-    html = html.replace(/\$\{primary_wear_mode\}/g, dailySummary.primaryWear);
-    html = html.replace(/\$\{wear_severity\}/g, dailySummary.wearSeverity);
-    html = html.replace(/\$\{total_wear_particles\}/g, latestData.total_wear_particles?.value || 0);
-    html = html.replace(/\$\{health_priority\}/g, dailySummary.healthPriority || 0);
-    
-    // Environmental conditions
-    html = html.replace(/\$\{temperature_avg\}/g, dailySummary.temperatureAvg || 'N/A');
-    html = html.replace(/\$\{temperature_status\}/g, dailySummary.temperatureStatus);
-    html = html.replace(/\$\{temperature_status_color\}/g, temperatureStatusColor);
-    html = html.replace(/\$\{humidity_avg\}/g, allData.relative_humidity ? calculateAverage(allData.relative_humidity) : 'N/A');
-    html = html.replace(/\$\{oil_degradation_avg\}/g, allData.oil_degradation ? calculateAverage(allData.oil_degradation) : 'N/A');
-    
-    // Sample quality
-    html = html.replace(/\$\{sample_quality\}/g, dailySummary.sampleQuality);
-    
-    // Recommendations
-    html = html.replace(/\$\{recommendations\}/g, recommendations);
-    
-    // Sensor image section
-    html = html.replace(/\$\{sensor_image_section\}/g, sensorImageSection);
-    
-    // Table content
-    html = html.replace(/\$\{table_content\}/g, generateOilAnalysisTableHTML(hourlySummaries));
-    
-    // Chart data (for trend analysis)
-    const chartData = {
-      labels: hourlySummaries.map(h => h.hour),
-      series: [
-        {
-          name: 'Health Priority',
-          data: hourlySummaries.map(h => h.healthPriority || 0)
-        },
-        {
-          name: 'Temperature',
-          data: hourlySummaries.map(h => h.temperature || 0)
-        },
-        {
-          name: 'Total Particles',
-          data: hourlySummaries.map(h => (h.totalParticles || 0) / 100) // Scale down for chart
+    new Chartist.Line('#oil-chart', {
+      labels: chartLabels,
+      series: chartSeries
+    }, {
+      fullWidth: true,
+      showArea: false,
+      chartPadding: {
+        right: 40,
+        left: 40,
+        top: 20,
+        bottom: 20
+      },
+      axisX: {
+        showGrid: true,
+        labelInterpolationFnc: function(value, index) {
+          // Show every 4th label to avoid crowding
+          return index % 4 === 0 ? value.split(' ')[1] : '';
         }
-      ]
-    };
-    
-    html = html.replace(/\$\{chart_labels\}/g, JSON.stringify(chartData.labels));
-    html = html.replace(/\$\{chart_series\}/g, JSON.stringify(chartData.series));
-
-    // Generate PDF
-    const base64 = Buffer.from(html).toString("base64");
-    const options = {
-      displayHeaderFooter: false,
-      margin: {
-        top: "0.25cm",
-        right: "0.25cm",
-        left: "0.25cm",
-        bottom: "0.25cm",
       },
-    };
-
-    const result = await axios.post("https://pdf.middleware.tago.io", { base64, options }, { headers: { token: context.token } });
-    const pdf = result.data.result;
-
-    context.log("Generated PDF successfully");
-
-    // Send the email
-    const email = new Services({ token: context.token }).email;
-    const email_settings = {
-      to: env_vars.email,
-      subject: `Daily Oil Analysis Report - ${dailySummary.overallHealth} Health Status`,
-      message: `
-        Daily oil analysis report summary:
-        
-        🔍 Overall Health: ${dailySummary.overallHealth}
-        🧪 ISO Status: ${dailySummary.isoStatus} (${dailySummary.isoCodeCurrent})
-        🔧 Machine Health: ${dailySummary.machineHealth}
-        🌡️ Temperature: ${dailySummary.temperatureStatus} (${dailySummary.temperatureAvg}°C)
-        ⚙️ Primary Wear: ${dailySummary.primaryWear} (${dailySummary.wearSeverity})
-        
-        ${recommendations}
-        
-        Full detailed report attached.
-      `,
-      attachment: {
-        archive: pdf,
-        type: "base64",
-        filename: `oil-analysis-report-${today_date.format("DD-MM-YYYY")}.pdf`,
+      axisY: {
+        showGrid: true,
+        onlyInteger: true,
+        offset: 40
       },
-    };
-
-    await email.send(email_settings);
-    context.log("Daily oil analysis report email sent successfully.");
-    
-  } catch (error) {
-    context.log(`Error occurred: ${error.message}`);
-    context.log(`Stack trace: ${error.stack}`);
-  }
-}
-
-module.exports = new Analysis(myDailyOilAnalysis);
+      lineSmooth: Chartist.Interpolation.simple({
+        divisor: 2
+      }),
+      low: 0,
+      height: '300px',
+      width: '100%',
+      series: {
+        'Health Priority': {
+          lineColor: '#dc3545',
+          strokeWidth: 3
+        },
+        'Temperature': {
+          lineColor: '#007bff',
+          strokeWidth: 2
+        },
+        'Total Particles': {
+          lineColor: '#28a745',
+          strokeWidth: 2
+        }
+      }
+    });
+  </script>
+  
+  <script>
+    // Set current year
+    document.addEventListener('DOMContentLoaded', function() {
+      const yearElements = document.querySelectorAll('[data-year]');
+      const currentYear = new Date().getFullYear();
+      yearElements.forEach(element => {
+        element.textContent = currentYear;
+      });
+    });
+  </script>
+</body>
+</html>
