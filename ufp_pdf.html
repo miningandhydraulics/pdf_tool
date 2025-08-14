@@ -3,30 +3,90 @@
   <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
   <style>
+    body {
+      font-family: 'Fira Sans', sans-serif;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 210mm;
+      margin: 0 auto;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #2c5aa0;
+      padding-bottom: 20px;
+    }
     .chart-section {
-      width: 100%; /* Use 100% of the container width */
-      max-width: 190mm; /* Adjust based on your PDF's actual visible area */
-      margin-bottom: 20px; /* Add space below the chart */
+      width: 100%;
+      max-width: 190mm;
+      margin-bottom: 20px;
     }
     .ct-chart {
-      padding-bottom: 20px; /* Add padding below the chart */
-      height: auto; /* Allow chart to auto scale its height */
-      width: 100%; /* Ensure chart uses full width of container */
+      padding-bottom: 20px;
+      height: auto;
+      width: 100%;
+    }
+    .health-status-box {
+      padding: 15px;
+      margin: 10px 0;
+      color: #fff;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
     }
     .iso-box {
       padding: 10px;
       margin: 10px 0;
       color: #fff;
       border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .status-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .status-card {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+    }
+    .status-card h3 {
+      margin: 0 0 10px 0;
+      color: #495057;
+      font-size: 14px;
+    }
+    .status-card .value {
+      font-size: 18px;
+      font-weight: bold;
+      padding: 8px;
+      border-radius: 4px;
+      color: white;
     }
     .centered-title {
       text-align: center;
-    }
-    .root-cause-title {
-      margin-top: 20px; /* Adjust the value as needed for spacing */
+      color: #2c5aa0;
     }
     .report-date {
       text-align: center;
+      font-size: 16px;
+      margin: 10px 0;
+    }
+    .device-info {
+      text-align: center;
+      background: #e9ecef;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 15px 0;
     }
     .chart-legend {
       text-align: center;
@@ -34,10 +94,10 @@
     }
     .chart-legend .legend-item {
       display: inline-block;
-      margin-right: 10px;
+      margin-right: 15px;
     }
     .chart-container {
-      page-break-inside: avoid; /* Avoid page break inside this container */
+      page-break-inside: avoid;
     }
     .chart-legend .legend-item i {
       display: inline-block;
@@ -46,63 +106,100 @@
       margin-right: 5px;
       border-radius: 50%;
     }
-    .centered-title {
-      text-align: center;
+    .recommendations-section {
+      background: #f8f9fa;
+      border-left: 4px solid #007bff;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 4px;
     }
-    .report-date {
-      text-align: center; /* Center align if you want the date centered as well */
+    .recommendations-section h3 {
+      color: #007bff;
+      margin-top: 0;
     }
-    /* Styles for table pagination */
+    .wear-analysis {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
       page-break-inside: auto;
+      margin: 20px 0;
     }
-    tr    { page-break-inside:avoid; page-break-after:auto }
-    thead { display:table-header-group }
-    tfoot { display:table-footer-group }
+    tr { 
+      page-break-inside: avoid; 
+      page-break-after: auto;
+    }
+    thead { 
+      display: table-header-group;
+      background-color: #2c5aa0;
+      color: white;
+    }
+    tfoot { 
+      display: table-footer-group;
+    }
     th, td {
-      border: 1px solid black;
-      padding: 5px;
+      border: 1px solid #dee2e6;
+      padding: 8px;
+      text-align: center;
     }
-    /* Styles for the footer */
+    th {
+      font-weight: bold;
+    }
+    tbody tr:nth-child(even) {
+      background-color: #f8f9fa;
+    }
     .footer {
-      text-align: center; /* Center align the footer content */
-      margin-top: 20px;
-      width: 100%; /* Ensure the footer takes full width */
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #dee2e6;
+      color: #6c757d;
     }
     .footer-content {
       display: inline-block;
       text-align: center;
     }
-    /* Page Break Style */
     .page-break {
       display: block;
       page-break-before: always;
     }
-    /* Adjusted styles for ISO threshold boxes */
-    .iso-threshold-box {
-      padding: 5px; /* Reduced padding */
-      border: 1px solid #e0e0e0;
-      margin-bottom: 10px; /* Reduced margin */
-      display: flex;
-      align-items: center; /* Align items vertically */
+    .section-title {
+      color: #2c5aa0;
+      border-bottom: 2px solid #2c5aa0;
+      padding-bottom: 5px;
+      margin: 25px 0 15px 0;
     }
-    .iso-threshold-box > div {
-      flex: 0 0 auto; /* Adjust flex settings */
-      margin-right: 10px; /* Add some space between text and color indicators */
-    }
-    .iso-threshold-box span {
-      display: flex;
-      align-items: center;
-      margin-right: 10px; /* Space between each indicator */
-    }
-    .iso-threshold-box span span {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
+    .alert-critical {
+      background-color: #dc3545;
+      color: white;
+      padding: 15px;
       border-radius: 5px;
-      margin-right: 5px; /* Space between color box and text */
+      margin: 15px 0;
+      text-align: center;
+      font-weight: bold;
+    }
+    .alert-warning {
+      background-color: #ffc107;
+      color: #212529;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 15px 0;
+      text-align: center;
+      font-weight: bold;
+    }
+    .alert-success {
+      background-color: #28a745;
+      color: white;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 15px 0;
+      text-align: center;
+      font-weight: bold;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
@@ -111,179 +208,236 @@
   <div class="container">
     <div class="header">
       <img src="https://github.com/miningandhydraulics/pdf_tool/blob/main/ufp-logo.png?raw=true" alt="Logo" style="height: 50px;">
-      <h1 class="centered-title">United Fluid Power - Filtration Report</h1>
+      <h1 class="centered-title">United Fluid Power - Oil Analysis Report</h1>
       <p class="report-date">Report Date: ${full_date}</p>
+      <div class="device-info">
+        <strong>Device Serial:</strong> ${device_serial} | <strong>Location:</strong> ${device_location}
+      </div>
     </div>
 
-    <!-- ISO Readings Title -->
-<h2>ISO Readings</h2>
-
-<!-- ISO Boxes -->
-<div class="iso-box" style="background-color: ${iso4_color};">ISO4 Average: ${iso4_avg}</div>
-<div class="iso-box" style="background-color: ${iso6_color};">ISO6 Average: ${iso6_avg}</div>
-<div class="iso-box" style="background-color: ${iso14_color};">ISO14 Average: ${iso14_avg}</div>
-
-<!-- New ISO Threshold Boxes -->
-<div class="iso-threshold-box">
-    <div style="font-weight: bold; margin-bottom: 10px;">ISO 4 (≥ 4 µm):</div>
-    <div style="margin-bottom: 5px; display: flex; justify-content: space-between;">
-        <span>
-            <span style="background-color: green;"></span>Green (Good): 10 or lower
-        </span>
-        <span>
-            <span style="background-color: orange;"></span>Orange (Caution): 11-20
-        </span>
-        <span>
-            <span style="background-color: red;"></span>Red (Critical): 21 or higher
-        </span>
+    <!-- Overall Health Status -->
+    <div class="health-status-box" style="background-color: ${overall_health_color};">
+      OVERALL OIL HEALTH: ${overall_health_status}
     </div>
-</div>
-<div class="iso-threshold-box">
-    <div style="font-weight: bold; margin-bottom: 10px;">ISO 6 (≥ 6 µm):</div>
-    <div style="margin-bottom: 5px; display: flex; justify-content: space-between;">
-        <span>
-            <span style="background-color: green;"></span>Green (Good): 15 or lower
-        </span>
-        <span>
-            <span style="background-color: orange;"></span>Orange (Caution): 16-25
-        </span>
-        <span>
-            <span style="background-color: red;"></span>Red (Critical): 26 or higher
-        </span>
+
+    <!-- Status Grid -->
+    <div class="status-grid">
+      <div class="status-card">
+        <h3>ISO Cleanliness</h3>
+        <div class="value" style="background-color: ${iso_status_color};">
+          ${iso_status}
+        </div>
+        <small>Current: ${iso_code_current}</small>
+      </div>
+      <div class="status-card">
+        <h3>Oil Condition</h3>
+        <div class="value" style="background-color: ${oil_condition_color};">
+          ${oil_condition}
+        </div>
+      </div>
+      <div class="status-card">
+        <h3>Machine Health</h3>
+        <div class="value" style="background-color: ${machine_health_color};">
+          ${machine_health}
+        </div>
+      </div>
     </div>
-</div>
-<div class="iso-threshold-box">
-    <div style="font-weight: bold; margin-bottom: 10px;">ISO 14 (≥ 14 µm):</div>
-    <div style="margin-bottom: 5px; display: flex; justify-content: space-between;">
-        <span>
-            <span style="background-color: green;"></span>Green (Good): 20 or lower
-        </span>
-        <span>
-            <span style="background-color: orange;"></span>Orange (Caution): 21-30
-        </span>
-        <span>
-            <span style="background-color: red;"></span>Red (Critical): 31 or higher
-        </span>
+
+    <!-- Wear Analysis Section -->
+    <div class="wear-analysis">
+      <h3 style="margin-top: 0; color: #856404;">Wear Particle Analysis</h3>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <div>
+          <strong>Primary Wear Mode:</strong> ${primary_wear_mode}<br>
+          <strong>Wear Severity:</strong> ${wear_severity}
+        </div>
+        <div>
+          <strong>Total Wear Particles:</strong> ${total_wear_particles}<br>
+          <strong>Health Priority:</strong> ${health_priority}/10
+        </div>
+      </div>
     </div>
-</div>
 
-<!-- Page Break -->
-<div class="page-break"></div>
+    <!-- ISO Readings -->
+    <h2 class="section-title">ISO Cleanliness Readings</h2>
+    <div class="iso-box" style="background-color: ${iso4_color};">
+      <span>ISO 4 (≥4μm): ${iso4_avg}</span>
+      <span>${iso4_status}</span>
+    </div>
+    <div class="iso-box" style="background-color: ${iso6_color};">
+      <span>ISO 6 (≥6μm): ${iso6_avg}</span>
+      <span>${iso6_status}</span>
+    </div>
+    <div class="iso-box" style="background-color: ${iso14_color};">
+      <span>ISO 14 (≥14μm): ${iso14_avg}</span>
+      <span>${iso14_status}</span>
+    </div>
 
-<!-- Brief Report Section -->
-<div class="report-section">
-  <h2>Report Overview</h2>
-  <p>This report provides an analysis of the diesel dispense quality as measured by ISO cleanliness standards. The data reflects the particle count in the diesel, categorized by size, and is crucial for assessing the quality and purity of the fuel.</p>
+    <!-- Recommendations Section -->
+    <div class="recommendations-section">
+      <h3>Recommendations & Actions</h3>
+      <p>${recommendations}</p>
+    </div>
 
-  <h3>ISO Cleanliness Levels:</h3>
-  <ul>
-    <li>ISO 4 (≥ 4 µm): ${iso4_avg}</li>
-    <li>ISO 6 (≥ 6 µm): ${iso6_avg}</li>
-    <li>ISO 14 (≥ 14 µm): ${iso14_avg}</li>
-  </ul>
+    <!-- Environmental Conditions -->
+    <h2 class="section-title">Environmental Conditions</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin: 15px 0;">
+      <div class="status-card">
+        <h3>Temperature</h3>
+        <div class="value" style="background-color: ${temperature_status_color}; color: white;">
+          ${temperature_avg}°C
+        </div>
+        <small>Status: ${temperature_status}</small>
+      </div>
+      <div class="status-card">
+        <h3>Humidity</h3>
+        <div class="value" style="background-color: #6c757d; color: white;">
+          ${humidity_avg}%
+        </div>
+      </div>
+      <div class="status-card">
+        <h3>Oil Degradation</h3>
+        <div class="value" style="background-color: #6c757d; color: white;">
+          ${oil_degradation_avg}%
+        </div>
+      </div>
+    </div>
 
-  <h3>Analysis and Findings:</h3>
-  <p>The ISO cleanliness levels for the diesel dispensed are as follows:</p>
-  <ul>
-    <li>ISO 4: The current level is ${iso4_avg}, which falls within the [Good/Caution/Critical for ISO 4] category.</li>
-    <li>ISO 6: The current level is ${iso6_avg}, which falls within the [Good/Caution/Critical for ISO 6] category.</li>
-    <li>ISO 14: The current level is ${iso14_avg}, which falls within the [Good/Caution/Critical for ISO 14] category.</li>
-  </ul>
-  <h3>Recommendations:</h3>
-  <p>Based on the ISO cleanliness levels, we recommend the following actions:</p>
-  <ul>
-    <li>[Specific actions based on ISO 4 value]</li>
-    <li>[Specific actions based on ISO 6 value]</li>
-    <li>[Specific actions based on ISO 14 value]</li>
-  </ul>
+    <!-- Page Break -->
+    <div class="page-break"></div>
 
-  <h3>Conclusion:</h3>
-  <p>Maintaining optimal fuel cleanliness is crucial for the efficient operation of diesel-powered machinery. Regular monitoring and adherence to ISO cleanliness standards ensure the longevity and reliability of the equipment. This report underscores the importance of ongoing quality checks and the need for appropriate measures to maintain or improve fuel purity.</p>
-</div>
+    <!-- Line Chart Section -->
+    <div class="chart-container chart-section">
+      <h2 class="section-title">24-Hour Trend Analysis</h2>
+      <section class="ct-chart line-chart" id="oil-chart"></section>
+      <div class="chart-legend">
+        <span class="legend-item"><i style="background: #dc3545;"></i> Health Priority</span>
+        <span class="legend-item"><i style="background: #007bff;"></i> Temperature (°C)</span>
+        <span class="legend-item"><i style="background: #28a745;"></i> Total Particles (÷100)</span>
+      </div>
+    </div>
 
-<!-- Page Break -->
-<div class="page-break"></div>
+    <!-- Page Break -->
+    <div class="page-break"></div>
 
-<!-- Line Chart Section -->
-<div class="chart-container chart-section">
-  <h2>Raw ISO Chart</h2>
-  <section class="ct-chart line-chart" id="iso-chart"></section>
-  <div class="chart-legend">
-    <span class="legend-item"><i style="background: #FFA500;"></i> ISO4 (Orange)</span>
-    <span class="legend-item"><i style="background: #0000FF;"></i> ISO6 (Blue)</span>
-    <span class="legend-item"><i style="background: #800080;"></i> ISO14 (Purple)</span>
+    <!-- Detailed Analysis Section -->
+    <div>
+      <h2 class="section-title">Detailed Analysis</h2>
+      
+      <h3>Oil Health Assessment:</h3>
+      <p>The current oil analysis indicates an overall health status of <strong>${overall_health_status}</strong>. 
+      This assessment is based on multiple factors including particle contamination, wear debris analysis, 
+      and oil condition evaluation.</p>
+
+      <h3>ISO Cleanliness Analysis:</h3>
+      <p>The ISO 4406 cleanliness code is currently <strong>${iso_code_current}</strong> with a status of <strong>${iso_status}</strong>. 
+      This represents the contamination level of particles ≥4μm, ≥6μm, and ≥14μm per milliliter of oil.</p>
+
+      <h3>Wear Pattern Analysis:</h3>
+      <p>The primary wear mode detected is <strong>${primary_wear_mode}</strong> with <strong>${wear_severity}</strong> severity. 
+      This indicates the type of mechanical wear occurring in the system and its current progression level.</p>
+
+      <h3>Sample Quality:</h3>
+      <p>Sample quality assessment: <strong>${sample_quality}</strong>. This ensures the reliability and accuracy of the analysis results.</p>
+    </div>
+
+    <!-- Page Break -->
+    <div class="page-break"></div>
+
+    <!-- Hourly Data Table -->
+    <h2 class="section-title">Hourly Analysis Summary</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Hour</th>
+          <th>ISO 4</th>
+          <th>ISO 6</th>
+          <th>ISO 14</th>
+          <th>Oil Health</th>
+          <th>Temp (°C)</th>
+          <th>Primary Wear</th>
+          <th>Priority</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${table_content}
+      </tbody>
+    </table>
+
+    <footer class="footer">
+      <div class="footer-content">
+        United Fluid Power - Oil Analysis Division<br>
+        17 Cutting Way Yangebup WA 6164<br>
+        Phone: 9418 8522 | Email: info@unitedfluidpower.com.au<br>
+        Report Generated: ${current_year}
+      </div>
+    </footer>
   </div>
-</div>
-
-<!-- Page Break -->
-<div class="page-break"></div>
-
-<!-- Root Cause Analysis Title -->
-<h2 class="root-cause-title">Hourly Averages</h2>
-
-<!-- Table Section -->
-<table>
-  <thead>
-    <tr>
-      <th>Hour</th>
-      <th>ISO 4</th>
-      <th>ISO 6</th>
-      <th>ISO 14</th>
-    </tr>
-  </thead>
-  <tbody>
-    ${table_content}
-  </tbody>
-</table>
-
-<footer class="footer">
-  <div class="footer-content">
-    United Fluid Power - <span id="current-year"></span><br>
-    17 Cutting Way Yangebup WA 6164<br>
-    Phone: 9418 8522
-  </div>
-  
-</footer>
 
   <!-- Script for generating the chart -->
   <script>
     var chartLabels = JSON.parse('${chart_labels}');
     var chartSeries = JSON.parse('${chart_series}');
     
-    console.log(chartSeries);
-    console.log(chartLabels);
+    console.log('Chart Data:', chartSeries);
+    console.log('Chart Labels:', chartLabels);
     
-    new Chartist.Line('#iso-chart', {
+    new Chartist.Line('#oil-chart', {
       labels: chartLabels,
       series: chartSeries
     }, {
       fullWidth: true,
-      showArea: true,
+      showArea: false,
       chartPadding: {
-        right: 10,
-        left: 10
+        right: 40,
+        left: 40,
+        top: 20,
+        bottom: 20
       },
       axisX: {
         showGrid: true,
         labelInterpolationFnc: function(value, index) {
-          return value;
+          // Show every 4th label to avoid crowding
+          return index % 4 === 0 ? value.split(' ')[1] : '';
         }
       },
       axisY: {
         showGrid: true,
         onlyInteger: true,
-        offset: 20
+        offset: 40
       },
       lineSmooth: Chartist.Interpolation.simple({
         divisor: 2
       }),
       low: 0,
-      height: 'auto',
-      width: '100%'
+      height: '300px',
+      width: '100%',
+      series: {
+        'Health Priority': {
+          lineColor: '#dc3545',
+          strokeWidth: 3
+        },
+        'Temperature': {
+          lineColor: '#007bff',
+          strokeWidth: 2
+        },
+        'Total Particles': {
+          lineColor: '#28a745',
+          strokeWidth: 2
+        }
+      }
     });
   </script>
+  
   <script>
-    document.getElementById('current-year').textContent = new Date().getFullYear();
+    // Set current year
+    document.addEventListener('DOMContentLoaded', function() {
+      const yearElements = document.querySelectorAll('[data-year]');
+      const currentYear = new Date().getFullYear();
+      yearElements.forEach(element => {
+        element.textContent = currentYear;
+      });
+    });
   </script>
 </body>
 </html>
